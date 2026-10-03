@@ -1,0 +1,10 @@
+# app-id|role
+org.mozilla.firefox|Alternative web browser
+org.telegram.desktop|Messaging
+org.cryptomator.Cryptomator|Client-side encrypted vaults
+org.onlyoffice.desktopeditors|Office documents
+org.gimp.GIMP|Image editing
+com.github.tchx84.Flatseal|Flatpak permission inspection
+org.videolan.VLC|Media playback
+com.spotify.Client|Music streaming
+dev.vencord.Vesktop|Discord-compatible desktop client

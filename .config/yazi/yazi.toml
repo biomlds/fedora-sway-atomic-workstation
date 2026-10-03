@@ -1,0 +1,35 @@
+[mgr]
+ratio = [1, 3, 4]
+sort_by = "natural"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+linemode = "size"
+show_hidden = false
+show_symlink = true
+scrolloff = 5
+
+[preview]
+wrap = "no"
+tab_size = 2
+max_width = 1200
+max_height = 1800
+image_filter = "triangle"
+image_quality = 80
+
+[opener]
+edit = [{ run = '${EDITOR:-nvim} "$@"', block = true, desc = "Edit", for = "unix" }]
+open = [{ run = 'xdg-open "$1"', orphan = true, desc = "Open", for = "linux" }]
+reveal = [{ run = 'xdg-open "$(dirname "$1")"', orphan = true, desc = "Reveal", for = "linux" }]
+
+[open]
+rules = [
+  { mime = "text/*", use = ["edit", "open"] },
+  { mime = "application/json", use = ["edit", "open"] },
+  { mime = "*/javascript", use = ["edit", "open"] },
+  { mime = "image/*", use = ["open", "reveal"] },
+  { mime = "video/*", use = ["open", "reveal"] },
+  { mime = "audio/*", use = ["open", "reveal"] },
+  { mime = "application/pdf", use = ["open", "reveal"] },
+  { mime = "*", use = ["open", "reveal"] }
+]

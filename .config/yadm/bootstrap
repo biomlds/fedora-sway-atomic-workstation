@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+bootstrap="$HOME/.local/bin/workstation-bootstrap"
+if [[ ! -x "$bootstrap" ]]; then
+  printf 'error: expected executable %s after yadm checkout\n' "$bootstrap" >&2
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  set -- apply
+fi
+exec "$bootstrap" "$@"

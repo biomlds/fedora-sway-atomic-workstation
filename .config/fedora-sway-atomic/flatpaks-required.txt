@@ -1,0 +1,6 @@
+# app-id|role
+com.brave.Browser|Primary web browser
+com.visualstudio.code|Graphical code editor
+md.obsidian.Obsidian|Knowledge base
+org.keepassxc.KeePassXC|Secrets source of truth
+com.borgbase.Vorta|Borg backup client and scheduler

@@ -1,0 +1,7 @@
+[settings]
+auto_install = false
+auto_update = false
+experimental = false
+idiomatic_version_file_enable_tools = []
+not_found_auto_install = false
+trusted_config_paths = ["~/Projects", "~/src"]

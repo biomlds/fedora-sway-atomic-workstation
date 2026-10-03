@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mode="${1:-clipboard}"
+geometry=$(slurp) || exit 0
+case "$mode" in
+  clipboard)
+    grim -g "$geometry" - | wl-copy
+    notify-send 'Screenshot' 'Selected region copied to clipboard.'
+    ;;
+  save)
+    directory="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+    mkdir -p "$directory"
+    file="$directory/$(date +'%Y-%m-%d_%H-%M-%S').png"
+    grim -g "$geometry" "$file"
+    notify-send 'Screenshot saved' "$file"
+    ;;
+  *)
+    printf 'usage: sway-screenshot [clipboard|save]\n' >&2
+    exit 2
+    ;;
+esac

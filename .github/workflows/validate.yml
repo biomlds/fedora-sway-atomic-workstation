@@ -1,0 +1,73 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install validators
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Validate repository
+        run: ./scripts/validate-repo.sh
+
+  toolbox-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Export build args from versions.env
+        id: pins
+        run: |
+          set -eu
+          set -a
+          . .config/fedora-sway-atomic/versions.env
+          set +a
+          {
+            echo 'args<<FSA_PINS_EOF'
+            echo "FEDORA_RELEASE=${FEDORA_RELEASE}"
+            echo "DEJA_VERSION=${DEJA_VERSION}"
+            echo "LAZYGIT_VERSION=${LAZYGIT_VERSION}"
+            echo "EZA_VERSION=${EZA_VERSION}"
+            echo "STARSHIP_VERSION=${STARSHIP_VERSION}"
+            echo "YAZI_VERSION=${YAZI_VERSION}"
+            echo "ZINIT_VERSION=${ZINIT_VERSION}"
+            echo "ZINIT_COMMIT=${ZINIT_COMMIT}"
+            echo "ZSH_SYNTAX_HIGHLIGHTING_VERSION=${ZSH_SYNTAX_HIGHLIGHTING_VERSION}"
+            echo "ZSH_SYNTAX_HIGHLIGHTING_COMMIT=${ZSH_SYNTAX_HIGHLIGHTING_COMMIT}"
+            echo "MISE_VERSION=${MISE_VERSION}"
+            echo 'FSA_PINS_EOF'
+          } >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: toolbox/Containerfile
+          push: false
+          load: true
+          tags: localhost/biomlds/workstation-toolbox:ci
+          build-args: ${{ steps.pins.outputs.args }}
+      - name: Smoke-test CLI inventory
+        run: >-
+          docker run --rm --entrypoint /bin/bash
+          localhost/biomlds/workstation-toolbox:ci -lc
+          'set -e; for c in zsh git fzf eza bat rg nvim lazygit tmux yazi starship mise jq tree deja; do command -v "$c"; done; test -r /usr/local/share/zinit/zinit.zsh; test -r /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh'
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan history for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false

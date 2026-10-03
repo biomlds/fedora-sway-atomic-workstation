@@ -1,0 +1,33 @@
+* {
+  bg: #1e1e2eee;
+  surface: #313244;
+  overlay: #6c7086;
+  text: #cdd6f4;
+  subtext: #a6adc8;
+  sapphire: #74c7ec;
+  red: #f38ba8;
+  spacing: 8px;
+}
+
+window {
+  width: 42%;
+  border: 2px;
+  border-color: @sapphire;
+  border-radius: 12px;
+  background-color: @bg;
+  padding: 16px;
+}
+
+mainbox { children: [inputbar, message, listview]; spacing: @spacing; }
+inputbar { background-color: @surface; border-radius: 8px; padding: 10px; children: [prompt, entry]; }
+prompt { text-color: @sapphire; margin: 0 8px 0 0; }
+entry { text-color: @text; placeholder: "Search"; placeholder-color: @subtext; }
+listview { lines: 10; columns: 1; fixed-height: false; scrollbar: false; }
+element { padding: 9px; border-radius: 8px; }
+element normal.normal { background-color: transparent; text-color: @text; }
+element selected.normal { background-color: @sapphire; text-color: #11111b; }
+element urgent.normal { background-color: @red; text-color: #11111b; }
+element-icon { size: 24px; margin: 0 10px 0 0; }
+element-text { vertical-align: 0.5; }
+message { background-color: @surface; border-radius: 8px; padding: 8px; }
+textbox { text-color: @text; }

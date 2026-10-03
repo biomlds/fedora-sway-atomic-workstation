@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>Catppuccin Mocha</string>
+  <key>settings</key>
+  <array>
+    <dict>
+      <key>settings</key>
+      <dict>
+        <key>background</key><string>#1E1E2E</string>
+        <key>caret</key><string>#F5E0DC</string>
+        <key>foreground</key><string>#CDD6F4</string>
+        <key>invisibles</key><string>#6C7086</string>
+        <key>lineHighlight</key><string>#313244</string>
+        <key>selection</key><string>#585B70</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Comment</string>
+      <key>scope</key><string>comment</string>
+      <key>settings</key><dict><key>foreground</key><string>#6C7086</string><key>fontStyle</key><string>italic</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>String</string>
+      <key>scope</key><string>string</string>
+      <key>settings</key><dict><key>foreground</key><string>#A6E3A1</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Number and constant</string>
+      <key>scope</key><string>constant.numeric, constant.language</string>
+      <key>settings</key><dict><key>foreground</key><string>#FAB387</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Keyword</string>
+      <key>scope</key><string>keyword, storage.type, storage.modifier</string>
+      <key>settings</key><dict><key>foreground</key><string>#CBA6F7</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Function</string>
+      <key>scope</key><string>entity.name.function, support.function</string>
+      <key>settings</key><dict><key>foreground</key><string>#89B4FA</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Type</string>
+      <key>scope</key><string>entity.name.type, entity.name.class, support.type</string>
+      <key>settings</key><dict><key>foreground</key><string>#F9E2AF</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Variable</string>
+      <key>scope</key><string>variable, entity.name.tag</string>
+      <key>settings</key><dict><key>foreground</key><string>#F38BA8</string></dict>
+    </dict>
+    <dict>
+      <key>name</key><string>Operator</string>
+      <key>scope</key><string>keyword.operator, punctuation.accessor</string>
+      <key>settings</key><dict><key>foreground</key><string>#89DCEB</string></dict>
+    </dict>
+  </array>
+  <key>uuid</key>
+  <string>1e6d4e93-2476-4af7-93b6-74c7ec1e1e2e</string>
+</dict>
+</plist>

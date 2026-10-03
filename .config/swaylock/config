@@ -1,0 +1,30 @@
+daemonize
+show-failed-attempts
+indicator
+indicator-radius=100
+indicator-thickness=8
+clock
+timestr=%H:%M
+datestr=%A, %d %B
+font=JetBrainsMono Nerd Font
+font-size=24
+color=1e1e2e
+inside-color=1e1e2eee
+inside-clear-color=f9e2afee
+inside-caps-lock-color=fab387ee
+inside-ver-color=74c7ecee
+inside-wrong-color=f38ba8ee
+key-hl-color=a6e3a1
+bs-hl-color=f38ba8
+ring-color=45475a
+ring-clear-color=f9e2af
+ring-caps-lock-color=fab387
+ring-ver-color=74c7ec
+ring-wrong-color=f38ba8
+separator-color=00000000
+text-color=cdd6f4
+text-clear-color=11111b
+text-caps-lock-color=11111b
+text-ver-color=11111b
+text-wrong-color=11111b
+line-color=00000000

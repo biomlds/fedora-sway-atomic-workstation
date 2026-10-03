@@ -1,0 +1,4 @@
+# Safe hardware-neutral baseline. Add serial-specific profiles as documented in docs/CUSTOMIZATION.md.
+profile fallback {
+    output "*" enable
+}

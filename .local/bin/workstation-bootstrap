@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly PROJECT_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/fedora-sway-atomic"
+readonly LIB_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/fedora-sway-atomic"
+
+# shellcheck source=/dev/null
+source "$PROJECT_HOME/versions.env"
+# shellcheck source=/dev/null
+source "$LIB_HOME/bootstrap-lib.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: workstation-bootstrap <plan|apply|check|verify> [--with-optional]
+
+  plan    Report intended changes without mutating the system.
+  apply   Converge host packages, Flatpaks, font, and versioned Toolbx.
+          Requires sudo: rpm-ostree layering and system-wide Flatpak installs.
+  check   Perform fast, local health checks.
+  verify  Perform deep checks, including remote Flatpak IDs and Toolbx tools.
+
+Options:
+  --with-optional  Include the optional Flatpak manifest in plan/apply/verify.
+EOF
+}
+
+stage="${1:-plan}"
+[[ $# -gt 0 ]] && shift
+with_optional=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --with-optional) with_optional=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) die "unknown argument: $1" ;;
+  esac
+  shift
+done
+
+case "$stage" in
+  plan) stage_plan "$with_optional" ;;
+  apply) stage_apply "$with_optional" ;;
+  check) stage_check "$with_optional" ;;
+  verify) stage_verify "$with_optional" ;;
+  -h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

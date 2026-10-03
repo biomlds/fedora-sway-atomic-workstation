@@ -1,0 +1,23 @@
+# Packages are layered only when absent from the booted Fedora deployment.
+yadm
+sway
+waybar
+rofi-wayland
+dunst
+foot
+kanshi
+swaylock
+swayidle
+brightnessctl
+playerctl
+NetworkManager-tui
+wl-clipboard
+grim
+slurp
+grimshot
+libnotify
+jq
+curl
+unzip
+fontconfig
+flatpak

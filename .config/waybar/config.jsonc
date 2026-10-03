@@ -1,0 +1,85 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 32,
+  "spacing": 4,
+  "reload_style_on_change": true,
+  "modules-left": ["sway/workspaces", "sway/mode", "sway/window"],
+  "modules-center": ["clock"],
+  "modules-right": ["idle_inhibitor", "pulseaudio", "network", "cpu", "memory", "temperature", "battery", "custom/toolbox", "tray"],
+  "sway/workspaces": {
+    "disable-scroll": false,
+    "all-outputs": false,
+    "format": "{icon}",
+    "format-icons": {
+      "1": "󰈹 1",
+      "2": "󰨞 2",
+      "3": "󰆍 3",
+      "4": "󰊗 4",
+      "5": "󰙯 5",
+      "urgent": "󰀪",
+      "focused": "",
+      "default": ""
+    }
+  },
+  "sway/window": {
+    "max-length": 60,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "$1",
+      "(.*) - Visual Studio Code": "$1"
+    }
+  },
+  "clock": {
+    "format": "󰥔 {:%a %d %b  %H:%M}",
+    "format-alt": "󰃭 {:%Y-%m-%d  %H:%M:%S}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "month",
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "format": {
+        "months": "<span color='#74c7ec'><b>{}</b></span>",
+        "days": "<span color='#cdd6f4'><b>{}</b></span>",
+        "weeks": "<span color='#a6adc8'><b>W{}</b></span>",
+        "weekdays": "<span color='#89b4fa'><b>{}</b></span>",
+        "today": "<span color='#f38ba8'><b><u>{}</u></b></span>"
+      }
+    }
+  },
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {"activated": "󰒳", "deactivated": "󰒲"}
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "󰖁 muted",
+    "format-icons": {"headphone": "󰋋", "default": ["󰕿", "󰖀", "󰕾"]},
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+  },
+  "network": {
+    "format-wifi": "󰤨 {signalStrength}%",
+    "format-ethernet": "󰈀 {ipaddr}",
+    "format-disconnected": "󰤭 offline",
+    "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nGateway: {gwaddr}",
+    "on-click": "foot --app-id=nmtui nmtui"
+  },
+  "cpu": {"format": "󰻠 {usage}%", "tooltip": true},
+  "memory": {"format": "󰍛 {percentage}%", "tooltip-format": "{used:0.1f} / {total:0.1f} GiB"},
+  "temperature": {"critical-threshold": 85, "format": "{icon} {temperatureC}°C", "format-icons": ["󱃃", "󰔏", "󱃂"]},
+  "battery": {
+    "states": {"warning": 30, "critical": 15},
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-plugged": "󰚥 {capacity}%",
+    "format-alt": "{time} {icon}",
+    "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+  },
+  "custom/toolbox": {
+    "format": "󰆧 dev",
+    "tooltip": "Open the versioned workstation Toolbx",
+    "on-click": "foot --app-id=workstation-toolbox workstation-shell"
+  },
+  "tray": {"icon-size": 16, "spacing": 8}
+}

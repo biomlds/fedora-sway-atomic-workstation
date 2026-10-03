@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+versions="${XDG_CONFIG_HOME:-$HOME/.config}/fedora-sway-atomic/versions.env"
+if [[ ! -r "$versions" ]]; then
+  printf 'error: missing %s; restore the yadm checkout first\n' "$versions" >&2
+  exit 1
+fi
+# shellcheck source=/dev/null
+source "$versions"
+
+if ! command -v podman >/dev/null 2>&1 || ! podman container exists "$TOOLBOX_NAME"; then
+  printf 'error: Toolbx %s is absent; run workstation-bootstrap apply\n' "$TOOLBOX_NAME" >&2
+  exit 1
+fi
+
+exec toolbox run --container "$TOOLBOX_NAME" zsh -l
