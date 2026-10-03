@@ -50,6 +50,14 @@ rebinds without unbinding does not replace the Fedora binding; it adds to it.
 - `grimshot` added to the host package manifest, because Fedora binds
   `Alt+Print` and `Ctrl+Print` to it and it was not installed.
 - `apply` fails early with a clear message when `sudo` is unavailable.
+- Theme coverage is now enforced rather than assumed. `validate-repo.sh` rejects
+  any color literal that is not a Catppuccin Mocha member, and separately rejects
+  a palette that still uses Mocha names but has drifted to the wrong value,
+  which a membership check cannot detect. The scan understands Sway `#rrggbb`,
+  `foot.ini` bare hex, `rgba()` decimals, the eight digit Rofi form, and three
+  digit shorthand outside CSS.
+- `README.md` no longer claims the theme applies "throughout"; it names the tools
+  that cannot be themed and links to the coverage matrix.
 
 ### Added
 
@@ -64,6 +72,24 @@ rebinds without unbinding does not replace the Fedora binding; it adds to it.
 - A CI secret scan over the repository history.
 - An ownership table in `docs/ARCHITECTURE.md` recording which component owns
   Waybar, swayidle, screenshots, and idle timeouts, and why.
+- `docs/THEMING.md` recording the palette, per-tool coverage, and the tools that
+  cannot be themed from a dotfiles repository.
+- `~/.gitconfig` with Mocha colors for `git diff`, `git status`, and branches.
+  Git otherwise applies its own dark red and dark green defaults, which are not
+  palette members.
+- `~/.config/lazygit/config.yml`, taken from the official Catppuccin port at its
+  Sapphire accent, plus `colorArg: always` so the Git colors survive paging
+  inside LazyGit.
+- VS Code settings at the path a Flatpak actually reads,
+  `~/.var/app/com.visualstudio.code/config/Code/User/settings.json`, with the
+  full 16 color terminal palette matching `foot.ini`. A file under
+  `~/.config/Code` would never have been read.
+- `~/.config/kdeglobals` with a Mocha Qt palette for applications running
+  outside a sandbox. It does not affect Vorta or KeePassXC, which is documented
+  rather than papered over.
+- `.gitignore` and `~/.config/yadm/skip`, kept identical by a validation gate so
+  that Flatpak and VS Code cache state cannot be committed in one workflow while
+  silently being tracked in the other.
 
 ## 1.0.0 - 2026-09-27
 

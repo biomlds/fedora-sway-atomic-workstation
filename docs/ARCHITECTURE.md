@@ -19,7 +19,10 @@ yadm owns the home-relative files in this repository. Fedora's Sway profile rema
 The host session consists of Sway, Waybar, Rofi, Dunst, Foot, Kanshi, Swaylock,
 and Swayidle. The visual system is Catppuccin Mocha with Sapphire (`#74c7ec`) as
 the principal accent. JetBrains Mono Nerd Font supplies consistent text and icon
-glyphs.
+glyphs. The palette extends past the session to Git, LazyGit, and the VS Code
+integrated terminal, and is enforced by `scripts/validate-repo.sh`; see
+[Theming](THEMING.md) for coverage and for the applications that cannot be
+themed from a dotfiles repository.
 
 #### Ownership of the session components
 

@@ -2,12 +2,12 @@
 
 A production-oriented, reproducible workstation repository for **Fedora Sway Atomic**. The repository is a native [yadm](https://yadm.io/) worktree: files under `.config`, `.local`, and the home-directory dotfiles are checked out directly into the user's home directory.
 
-The implementation keeps the immutable host small, installs GUI applications as Flatpaks, and places the development CLI in a versioned Toolbx image. It uses Catppuccin Mocha with the Sapphire accent and JetBrains Mono Nerd Font throughout.
+The implementation keeps the immutable host small, installs GUI applications as Flatpaks, and places the development CLI in a versioned Toolbx image. It uses Catppuccin Mocha with the Sapphire accent and JetBrains Mono Nerd Font across every tool that supports theming, and the palette is enforced by the validator rather than left to convention. See [theming](docs/THEMING.md) for coverage and the known gaps.
 
 ## What is included
 
 - Fedora's Sway, Waybar, Rofi, Dunst, Foot, Kanshi, Swaylock, and Swayidle stack.
-- Cohesive Catppuccin Mocha/Sapphire configuration for the desktop and terminal tools.
+- Cohesive Catppuccin Mocha/Sapphire configuration for the desktop and terminal tools, including Git, LazyGit, and the VS Code integrated terminal.
 - A Fedora 44 Toolbx image containing Zsh, Zinit, Deja, zsh-syntax-highlighting, FZF, eza, bat, ripgrep, Neovim, LazyGit, tmux, Yazi, Starship, mise, jq, and tree.
 - Required and optional Flatpak manifests installed system-wide from Flathub. Vorta is the backup client; Borgmatic is deliberately not installed.
 - Idempotent `plan`, `apply`, `check`, and `verify` bootstrap stages.
@@ -125,6 +125,7 @@ own Sway snippets, not by this repository. The ownership table is in
 - [Flatpak catalog and validation](docs/FLATPAKS.md)
 - [Security model](docs/SECURITY.md)
 - [Hardware customization](docs/CUSTOMIZATION.md)
+- [Theming](docs/THEMING.md)
 - [Tested hardware](docs/TESTED-HARDWARE.md)
 - [Upstream references](docs/UPSTREAMS.md)
 

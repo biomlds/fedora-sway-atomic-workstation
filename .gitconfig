@@ -1,0 +1,64 @@
+# Catppuccin Mocha. Git otherwise falls back to its own dark red and dark green
+# defaults, which are not palette members, so every diff in every terminal would
+# be off-theme. Note that this file is scanned by validate-repo.sh, so a comment
+# must not quote a hex value even when describing a non-palette color.
+#
+# This file is tracked as part of the home directory. Keep identity settings in
+# a separate, untracked file so that committing configuration never publishes a
+# name or an address: see .gitconfig-local in the yadm documentation.
+
+[color]
+	ui = auto
+
+[color "branch"]
+	current = green bold
+	remote = "#6c7086" italic
+	upstream = "#a6e3a1"
+
+[color "diff"]
+	meta = "#f9e2af" dim
+	frag = "#6c7086"
+	func = "#89b4fa"
+	literal = "#fab387"
+	old = "#f38ba8" strike
+	new = "#a6e3a1"
+	commit = "#cba6f7"
+	whitespace = "#f38ba8" reverse
+	moved = "#74c7ec"
+	zebra = "#313244"
+
+[color "diffMoved"]
+	zebra = "#313244"
+
+[color "diffMovedMoved"]
+	old = "#f9e2af"
+	new = "#89b4fa"
+
+[color "diffMovedWord"]
+	old = "#f9e2af" bold
+	new = "#89b4fa" bold
+
+[color "status"]
+	added = "#a6e3a1"
+	changed = "#f9e2af"
+	untracked = "#89dceb"
+	noBranch = "#f38ba8"
+	upstream = "#a6e3a1"
+
+[color "tag"]
+	Normal = "#f5e0dc" bold
+
+[color "stash"]
+	Normal = "#f9e2af"
+
+[color "credential"]
+	Helper = "#74c7ec"
+
+[color "blame"]
+	boundary = "#6c7086"
+
+[diff]
+	algorithm = histogram
+
+[merge]
+	conflictstyle = zdiff3

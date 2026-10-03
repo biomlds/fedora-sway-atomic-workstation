@@ -1,0 +1,43 @@
+# Catppuccin Mocha with the Sapphire accent, from the official Catppuccin port:
+# https://github.com/catppuccin/lazygit (themes/mocha/sapphire.yml)
+#
+# lazygit accepts either 16 color names or "#rrggbb" values, so the port pins
+# exact Mocha values rather than the ANSI names, which would follow whatever
+# terminal palette happens to be loaded.
+
+gui:
+  theme:
+    lightTheme: false
+    activeBorderColor:
+      - "#74c7ec"
+      - bold
+    inactiveBorderColor:
+      - "#a6adc8"
+    searchingActiveBorderColor:
+      - "#f9e2af"
+    optionsTextColor:
+      - "#89b4fa"
+    selectedLineBgColor:
+      - "#313244"
+    inactiveViewSelectedLineBgColor:
+      - "#6c7086"
+    cherryPickedCommitFgColor:
+      - "#74c7ec"
+    cherryPickedCommitBgColor:
+      - "#45475a"
+    markedBaseCommitFgColor:
+      - "#89b4fa"
+    markedBaseCommitBgColor:
+      - "#f9e2af"
+    unstagedChangesColor:
+      - "#f38ba8"
+    defaultFgColor:
+      - "#cdd6f4"
+  authorColors:
+    "*": "#b4befe"
+
+git:
+  paging:
+    # Honor the Mocha colors from .gitconfig even where auto-detection would
+    # disable them, such as when stdout is a pipe inside lazygit.
+    colorArg: always

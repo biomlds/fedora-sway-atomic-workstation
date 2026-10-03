@@ -1,0 +1,69 @@
+# Catppuccin Mocha Qt palette.
+#
+# IMPORTANT: this file does NOT theme the Flatpaks in this repository. Flatpak
+# redirects XDG_CONFIG_HOME to ~/.var/app/<app-id>/config, and non-KDE Qt
+# applications do not read kdeglobals at all; they need a qt5ct/qt6ct color
+# scheme plus QT_QPA_PLATFORMTHEME set through "flatpak override --env".
+# See docs/THEMING.md for that recipe. It is left here so that any Qt
+# application running outside a sandbox inherits the palette.
+
+[Colors:Window]
+BackgroundNormal=#1e1e2e
+BackgroundAlternate=#181825
+ForegroundNormal=#cdd6f4
+ForegroundAlternate=#bac2de
+
+[Colors:View]
+BackgroundNormal=#1e1e2e
+BackgroundAlternate=#181825
+ForegroundNormal=#cdd6f4
+ForegroundAlternate=#bac2de
+
+[Colors:WindowText]
+Normal=#cdd6f4
+
+[Colors:Selection]
+BackgroundNormal=#74c7ec
+ForegroundNormal=#11111b
+
+[Colors:Button]
+BackgroundNormal=#313244
+BackgroundAlternate=#45475a
+ForegroundNormal=#cdd6f4
+ForegroundAlternate=#bac2de
+
+[Colors:ButtonText]
+Normal=#cdd6f4
+
+[Colors:Highlight]
+Normal=#74c7ec
+
+[Colors:HighlightedText]
+Normal=#11111b
+
+[Colors:ToolTipBase]
+Normal=#181825
+
+[Colors:ToolTipText]
+Normal=#cdd6f4
+
+[Colors:PlaceholderText]
+Normal=#6c7086
+
+[Colors:Text]
+Normal=#cdd6f4
+
+[Colors:BrightText]
+Normal=#b4befe
+
+[Colors:DisabledText]
+Normal=#6c7086
+
+[Colors:Link]
+Normal=#89b4fa
+
+[Colors:VisitedText]
+Normal=#cba6f7
+
+[Colors:Accent]
+Normal=#74c7ec

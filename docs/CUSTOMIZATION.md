@@ -59,6 +59,19 @@ If a setting appears to have no effect, check which component owns it first: Way
 
 Change related values together and verify Nerd Font icons remain aligned.
 
+## Colors and theme
+
+The palette is Catppuccin Mocha with the Sapphire accent, and it is enforced by
+`./scripts/validate-repo.sh`. Any color literal that is not a Mocha member fails
+validation, so a hex typo in a snippet is caught before it reaches the desktop
+rather than after.
+
+This also constrains what you can do. A new snippet that needs a color has to
+reuse a palette member, and `10-theme.conf` must keep defining all 26 names with
+their canonical values. Substituting a different Catppuccin flavor means
+editing the validator's expected table along with the configs, which
+[Theming](THEMING.md) walks through.
+
 ## Optional Flatpaks
 
 Review `.config/fedora-sway-atomic/flatpaks-optional.txt`, remove applications you do not want, then run:

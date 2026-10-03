@@ -27,7 +27,10 @@ required_files=(
   .config/kanshi/config .config/swaylock/config
   toolbox/Containerfile docs/ARCHITECTURE.md docs/RECOVERY.md docs/OPERATIONS.md
   docs/SECURITY.md docs/CUSTOMIZATION.md docs/FLATPAKS.md docs/UPSTREAMS.md
-  docs/INSTALL.md docs/HARDENING.md docs/TESTED-HARDWARE.md
+  docs/INSTALL.md docs/HARDENING.md docs/TESTED-HARDWARE.md docs/THEMING.md
+  .gitconfig .gitignore .config/yadm/skip .config/lazygit/config.yml
+  .config/kdeglobals
+  .var/app/com.visualstudio.code/config/Code/User/settings.json
 )
 for file in "${required_files[@]}"; do
   [[ -s "$file" ]] || fail "missing or empty required file: $file"
@@ -66,6 +69,7 @@ python3 - <<'PY' || failures=1
 import json, pathlib, re, tomllib, xml.etree.ElementTree as ET
 root = pathlib.Path('.')
 json.loads((root / '.config/waybar/config.jsonc').read_text())
+json.loads((root / '.var/app/com.visualstudio.code/config/Code/User/settings.json').read_text())
 ET.parse(root / '.config/bat/themes/Catppuccin Mocha.tmTheme')
 for path in root.rglob('*.toml'):
     tomllib.loads(path.read_text())
@@ -195,6 +199,188 @@ if grep -q 'SHA256SUMS' .local/share/fedora-sway-atomic/bootstrap-lib.sh; then
 else
   pass 'font installer verifies against the pinned digest'
 fi
+
+# yadm reads .config/yadm/skip, while a plain checkout of this repository reads
+# .gitignore. Both files describe the same exclusions, so a divergence would
+# let cache data be committed in one workflow but not the other.
+strip_comments() { grep -vE '^[[:space:]]*(#|$)' "$1" | sed -e 's/[[:space:]]*$//' | sort; }
+if [[ -f .config/yadm/skip && -f .gitignore ]]; then
+  if diff -u <(strip_comments .gitignore) <(strip_comments .config/yadm/skip) >/dev/null; then
+    pass '.gitignore and yadm skip rules agree'
+  else
+    fail '.gitignore and .config/yadm/skip have diverged'
+  fi
+else
+  fail 'missing .gitignore or .config/yadm/skip'
+fi
+
+# Theme policy. Catppuccin Mocha with the Sapphire accent is a stated goal, not
+# an accident, so it is enforced instead of trusted. Gate one rejects any color
+# literal that is not a Mocha member; gate two rejects a palette that still
+# uses Mocha names but has drifted onto the wrong values, which gate one cannot
+# see because every drifted value is itself in-palette.
+python3 - <<'PY' || failures=1
+import pathlib, re, sys
+
+MOCHA = {
+    'rosewater': 'f5e0dc', 'flamingo': 'f2cdcd', 'pink': 'f5c2e7', 'mauve': 'cba6f7',
+    'red': 'f38ba8', 'maroon': 'eba0ac', 'peach': 'fab387', 'yellow': 'f9e2af',
+    'green': 'a6e3a1', 'teal': '94e2d5', 'sky': '89dceb', 'sapphire': '74c7ec',
+    'blue': '89b4fa', 'lavender': 'b4befe', 'text': 'cdd6f4', 'subtext1': 'bac2de',
+    'subtext0': 'a6adc8', 'overlay2': '9399b2', 'overlay1': '7f849c', 'overlay0': '6c7086',
+    'surface2': '585b70', 'surface1': '45475a', 'surface0': '313244', 'base': '1e1e2e',
+    'mantle': '181825', 'crust': '11111b',
+}
+ALLOWED = set(MOCHA.values())
+problems = []
+
+# Every file that is allowed to carry a color literal. Documentation is excluded
+# on purpose: it legitimately quotes non-palette colors when explaining a point.
+# Comments inside these files are NOT excluded, so a hex value mentioned in a
+# comment still has to be a palette member. That is deliberate: it keeps the
+# scan free of per-format comment-stripping heuristics, and the alternative is a
+# config file that silently drifts out of the palette.
+THEME_FILES = [
+    '.config/sway/config.d/10-theme.conf',
+    '.config/swaylock/config',
+    '.config/waybar/style.css',
+    '.config/foot/foot.ini',
+    '.config/rofi/config.rasi',
+    '.local/share/rofi/themes/catppuccin-mocha-sapphire.rasi',
+    '.config/dunst/dunstrc',
+    '.config/tmux/tmux.conf',
+    '.config/yazi/theme.toml',
+    '.config/starship.toml',
+    '.config/nvim/init.lua',
+    '.config/bat/themes/Catppuccin Mocha.tmTheme',
+    '.config/lazygit/config.yml',
+    '.config/kdeglobals',
+    '.gitconfig',
+    '.var/app/com.visualstudio.code/config/Code/User/settings.json',
+]
+
+def normalize(value):
+    return value.lower().lstrip('#')
+
+for name in THEME_FILES:
+    path = pathlib.Path(name)
+    if not path.is_file():
+        problems.append(f'{name}: expected theme file is missing')
+        continue
+    text = path.read_text()
+
+    # In CSS every "#" starts an id selector, and several hex digits alone make
+    # a plausible id, so three-digit shorthand is only honoured outside CSS.
+    widths = r'(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})'
+    if path.suffix == '.css':
+        widths = r'(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6})'
+
+    for match in re.finditer(r'#(' + widths + r')\b', text):
+        digits = match.group(1).lower()
+        value = digits[:6]
+        if value not in ALLOWED:
+            line = text.count('\n', 0, match.start()) + 1
+            problems.append(f'{name}:{line}: {digits} is not a Catppuccin Mocha color')
+
+    for match in re.finditer(r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', text, re.I):
+        value = ''.join(f'{int(part):02x}' for part in match.groups())
+        if value not in ALLOWED:
+            line = text.count('\n', 0, match.start()) + 1
+            problems.append(f'{name}:{line}: rgb({value}) is not a Catppuccin Mocha color')
+
+    # foot(1) takes bare hex without a leading "#".
+    if name.endswith('foot.ini'):
+        for match in re.finditer(r'^[A-Za-z][\w-]*\s*=\s*([0-9a-fA-F]{6})\s*$', text, re.M):
+            if match.group(1).lower() not in ALLOWED:
+                line = text.count('\n', 0, match.start()) + 1
+                problems.append(f'{name}:{line}: {match.group(1).lower()} is not a Catppuccin Mocha color')
+
+def check_palette(label, found, require_all):
+    for key, value in found.items():
+        expected = MOCHA.get(key)
+        if expected is None:
+            problems.append(f'{label}: {key} is not a Catppuccin Mocha color name')
+        elif expected != value:
+            problems.append(f'{label}: {key} is #{value}, drifted from Mocha #{expected}')
+    missing = sorted(set(MOCHA) - set(found))
+    if require_all and missing:
+        problems.append(f'{label}: palette is missing {", ".join(missing)}')
+
+sway = pathlib.Path('.config/sway/config.d/10-theme.conf').read_text()
+check_palette(
+    '.config/sway/config.d/10-theme.conf',
+    {m.group(1): m.group(2).lower() for m in
+     re.finditer(r'^\s*set\s+\$(\w+)\s+#?([0-9a-fA-F]{6})\s*$', sway, re.M)},
+    require_all=True,
+)
+
+starship = pathlib.Path('.config/starship.toml').read_text()
+block = re.search(r'\[palettes\.catppuccin_mocha\](.*?)(?=\n\[|\Z)', starship, re.S)
+if block is None:
+    problems.append('.config/starship.toml: missing the [palettes.catppuccin_mocha] block')
+else:
+    check_palette(
+        '.config/starship.toml',
+        {m.group(1): m.group(2).lower() for m in
+         re.finditer(r'''(\w+)\s*=\s*["']?#([0-9a-fA-F]{6})''', block.group(1))},
+        require_all=True,
+    )
+
+nvim = pathlib.Path('.config/nvim/init.lua').read_text()
+table = re.search(r'local\s+mocha\s*=\s*\{(.*?)\}', nvim, re.S)
+if table is None:
+    problems.append('.config/nvim/init.lua: missing the mocha palette table')
+else:
+    # Neovim deliberately carries only the subset it highlights, so extra names
+    # are not an error here; every value it does carry still has to be correct.
+    check_palette(
+        '.config/nvim/init.lua',
+        {m.group(1): m.group(2).lower() for m in
+         re.finditer(r'(\w+)\s*=\s*"#([0-9a-fA-F]{6})"', table.group(1))},
+        require_all=False,
+    )
+
+if problems:
+    for problem in problems:
+        print(f'[FAIL] {problem}', file=sys.stderr)
+    sys.exit(1)
+print('[PASS] Catppuccin Mocha palette is enforced')
+PY
+
+# The documentation promises that the VS Code integrated terminal matches foot.
+# Both files are in-palette independently, so palette membership alone cannot
+# keep that promise; compare the two directly.
+python3 - <<'PY' || failures=1
+import json, pathlib, re, sys
+
+foot = pathlib.Path('.config/foot/foot.ini').read_text().split('[colors]')[1].split('[')[0]
+foot_map = dict(re.findall(
+    r'^(regular\d|bright\d|background|foreground|selection-background)\s*=\s*([0-9a-fA-F]{6})',
+    foot, re.M))
+
+settings = json.loads(
+    pathlib.Path('.var/app/com.visualstudio.code/config/Code/User/settings.json').read_text())
+tones = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White']
+vscode_map = {
+    'background': settings['terminal.integrated.background'],
+    'foreground': settings['terminal.integrated.foreground'],
+    'selection-background': settings['terminal.integrated.selectionBackground'],
+}
+for index, tone in enumerate(tones):
+    vscode_map[f'regular{index}'] = settings[f'terminal.integrated.ansi{tone}']
+    vscode_map[f'bright{index}'] = settings[f'terminal.integrated.ansiBright{tone}']
+
+mismatches = [
+    f'{key}: foot #{value.lower()} but VS Code #{vscode_map.get(key, "<absent>").lower().lstrip("#")}'
+    for key, value in sorted(foot_map.items())
+    if vscode_map.get(key, '').lstrip('#').lower() != value.lstrip('#').lower()
+]
+if mismatches:
+    for mismatch in mismatches:
+        print(f'[FAIL] terminal palette differs between foot and VS Code: {mismatch}', file=sys.stderr)
+    sys.exit(1)
+print('[PASS] VS Code terminal palette matches foot')
+PY
 
 if (( failures )); then
   printf '\nRepository validation failed.\n' >&2

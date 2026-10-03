@@ -113,6 +113,44 @@ Work through this list before relying on the workstation:
 Two of these are regression guards for bugs fixed in this version; they are
 worth confirming explicitly rather than assuming.
 
+## 8. Theme the applications that need it
+
+Most tools are themed by this repository alone, so there is nothing to do here.
+Three do not, and are listed so they are a known gap rather than a surprise:
+
+- **VS Code** is not themed until its Catppuccin extension is installed. Run
+  this once:
+
+  ```bash
+  flatpak run com.visualstudio.code \
+    --install-extension catppuccin.catppuccin-vsc
+  ```
+
+  Without it VS Code shows a warning that the requested theme is missing. The
+  integrated terminal is on-palette either way, because its palette is written
+  out in `settings.json`.
+
+- **KeePassXC** ships only Light, Dark, and System. Select its built-in **Dark**
+  theme in Settings → Appearance. There is no Catppuccin port.
+
+- **Vorta** has no dark mode and, being a Flatpak, cannot see
+  `~/.config/kdeglobals`. The recipe in [Theming](THEMING.md) is unverified;
+  treat it as an experiment rather than a required step.
+
+Brave and Obsidian themes are selected inside the application, per profile and
+per vault respectively. [Theming](THEMING.md) links the official ports.
+
+Then confirm the theme is consistent end to end:
+
+```bash
+git diff
+lazygit
+```
+
+`git diff` output and LazyGit both use the Mocha colors from this repository
+rather than Git's own defaults. Run `./scripts/validate-repo.sh` if you changed
+any color by hand.
+
 ## Cleaning up the reboot marker
 
 After confirming the deployment is healthy:
