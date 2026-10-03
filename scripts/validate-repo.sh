@@ -30,6 +30,11 @@ required_files=(
   docs/INSTALL.md docs/HARDENING.md docs/TESTED-HARDWARE.md docs/THEMING.md
   .gitconfig .gitignore .config/yadm/skip .config/lazygit/config.yml
   .config/kdeglobals
+  .config/eza/theme.yml .config/qt5ct/qt5ct.conf
+  .config/qt5ct/colors/catppuccin-mocha-sapphire.conf
+  .config/nvim/init.lua .config/nvim/colors/catppuccin-mocha.lua
+  .config/nvim/lua/catppuccin/init.lua .config/nvim/lua/catppuccin/VENDORED.md
+  .config/nvim/lua/catppuccin/palettes/mocha.lua
   .var/app/com.visualstudio.code/config/Code/User/settings.json
 )
 for file in "${required_files[@]}"; do
@@ -38,11 +43,25 @@ done
 (( failures == 0 )) && pass 'required file inventory'
 
 # Every relative Markdown link must resolve, so a renamed document cannot leave
-# a dangling pointer behind.
+# a dangling pointer behind. A link may carry a "#fragment": the file part must
+# exist, and the fragment must match a heading in the target, so a renamed
+# section cannot leave a dangling anchor behind either.
+slugify() { tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9 -]//g' -e 's/ \{1,\}/-/g' -e 's/^-//' -e 's/-$//'; }
+heading_slugs() { grep -hE '^#{1,6} ' "$1" | sed -E 's/^#{1,6} +//' | slugify; }
 while IFS= read -r -d '' doc; do
   doc_dir=$(dirname -- "$doc")
   while IFS= read -r target; do
-    [[ -e "$doc_dir/$target" ]] || fail "broken link in ${doc#./}: $target"
+    path=${target%%#*}
+    fragment=${target#"$path"}
+    fragment=${fragment#\#}
+    if [[ ! -e "$doc_dir/$path" ]]; then
+      fail "broken link in ${doc#./}: $target"
+      continue
+    fi
+    if [[ -n "$fragment" ]] && [[ -f "$doc_dir/$path" ]]; then
+      heading_slugs "$doc_dir/$path" | grep -Fxq "$(printf '%s' "$fragment" | slugify)" \
+        || fail "broken anchor in ${doc#./}: $target"
+    fi
   done < <(grep -oE '\]\([^)#][^)]*\)' "$doc" | sed -e 's/^](//' -e 's/)$//' | grep -vE '^(https?:|mailto:)' || true)
 done < <(find . -type f -name '*.md' -print0)
 (( failures == 0 )) && pass 'documentation links'
@@ -106,20 +125,28 @@ else
   pass 'no Quadlet units'
 fi
 
+# Repository hygiene is asserted over our own files. The vendored third-party
+# Catppuccin Neovim tree is deliberately excluded: it must stay byte-identical to
+# the pinned upstream commit, so rewriting it to satisfy a style gate would make
+# the pin meaningless. It is still covered, by the palette and pin gates below.
+hygiene_files() {
+  find . -type f -not -path './.git/*' -not -path './.config/nvim/lua/catppuccin/*' -print0
+}
+
 placeholder_pattern='TO''DO|FIX''ME|CHANGE''ME|YOUR_[A-Z_]+|INSERT_[A-Z_]+'
-if grep -RInE "($placeholder_pattern)" --exclude-dir=.git .; then
+if hygiene_files | xargs -0 -r grep -InE "($placeholder_pattern)"; then
   fail 'placeholder marker detected'
 else
   pass 'no placeholder markers'
 fi
 
-if grep -RIl $'\r' --exclude-dir=.git . | grep -q .; then
+if hygiene_files | xargs -0 -r grep -Il $'\r' | grep -q .; then
   fail 'CRLF line ending detected'
 else
   pass 'LF line endings'
 fi
 
-if grep -RInE '[[:blank:]]+$' --exclude-dir=.git .; then
+if hygiene_files | xargs -0 -r grep -InE '[[:blank:]]+$'; then
   fail 'trailing whitespace detected'
 else
   pass 'no trailing whitespace'
@@ -128,7 +155,7 @@ fi
 while IFS= read -r -d '' file; do
   [[ -s "$file" ]] || continue
   [[ "$(tail -c1 "$file" | od -An -c | tr -d ' \n')" == '\n' ]] || fail "missing final newline: ${file#./}"
-done < <(find . -type f -not -path './.git/*' -print0)
+done < <(hygiene_files)
 (( failures == 0 )) && pass 'final newlines'
 
 expected_executables=(
@@ -256,8 +283,19 @@ THEME_FILES = [
     '.config/lazygit/config.yml',
     '.config/kdeglobals',
     '.gitconfig',
+    '.config/eza/theme.yml',
+    '.config/qt5ct/qt5ct.conf',
+    '.config/qt5ct/colors/catppuccin-mocha-sapphire.conf',
     '.var/app/com.visualstudio.code/config/Code/User/settings.json',
 ]
+
+# qt5ct writes eight-digit values as #AARRGGBB: two hex digits of alpha, then
+# the six RGB digits. The generic scan below reads eight digits as #RRGGBBAA, so
+# these files are named explicitly and decoded the other way round. Getting this
+# backwards would read a legal "alpha ff over mantle" value as a bogus colour.
+AARRGGBB_FILES = {
+    '.config/qt5ct/colors/catppuccin-mocha-sapphire.conf',
+}
 
 def normalize(value):
     return value.lower().lstrip('#')
@@ -277,7 +315,10 @@ for name in THEME_FILES:
 
     for match in re.finditer(r'#(' + widths + r')\b', text):
         digits = match.group(1).lower()
-        value = digits[:6]
+        if name in AARRGGBB_FILES and len(digits) == 8:
+            value = digits[2:]
+        else:
+            value = digits[:6]
         if value not in ALLOWED:
             line = text.count('\n', 0, match.start()) + 1
             problems.append(f'{name}:{line}: {digits} is not a Catppuccin Mocha color')
@@ -326,18 +367,24 @@ else:
         require_all=True,
     )
 
-nvim = pathlib.Path('.config/nvim/init.lua').read_text()
-table = re.search(r'local\s+mocha\s*=\s*\{(.*?)\}', nvim, re.S)
-if table is None:
-    problems.append('.config/nvim/init.lua: missing the mocha palette table')
+# Neovim uses the official Catppuccin port, vendored under
+# .config/nvim/lua/catppuccin/. That tree is third-party code and is
+# deliberately NOT in THEME_FILES: it carries three literals that are not
+# palette colours and are never emitted with flavour = "mocha" (a lighten()
+# call guarded by a `latte =` branch) or are Neovim's own blend sentinels
+# rather than a colour to draw. Hand-editing vendored code would also make the
+# commit pin meaningless. What matters is the one thing that decides how Neovim
+# looks, so that is what is asserted: the vendored Mocha palette must be exactly
+# the canonical 26 values.
+nvim_palette = pathlib.Path('.config/nvim/lua/catppuccin/palettes/mocha.lua')
+if not nvim_palette.is_file():
+    problems.append('.config/nvim/lua/catppuccin/palettes/mocha.lua: vendored palette is missing')
 else:
-    # Neovim deliberately carries only the subset it highlights, so extra names
-    # are not an error here; every value it does carry still has to be correct.
     check_palette(
-        '.config/nvim/init.lua',
+        '.config/nvim/lua/catppuccin/palettes/mocha.lua',
         {m.group(1): m.group(2).lower() for m in
-         re.finditer(r'(\w+)\s*=\s*"#([0-9a-fA-F]{6})"', table.group(1))},
-        require_all=False,
+         re.finditer(r'^\s*(\w+)\s*=\s*"#([0-9a-fA-F]{6})",?\s*$', nvim_palette.read_text(), re.M)},
+        require_all=True,
     )
 
 if problems:
@@ -346,6 +393,30 @@ if problems:
     sys.exit(1)
 print('[PASS] Catppuccin Mocha palette is enforced')
 PY
+
+# The Neovim colorscheme is the official Catppuccin port, vendored instead of
+# installed through a plugin manager so the palette cannot drift and the offline
+# container build cannot fail on a fetch. That guarantee only holds while the
+# vendored tree is still core-only and still matches the commit recorded in
+# versions.env, so both are checked rather than trusted.
+nvim_vendor='.config/nvim/lua/catppuccin'
+for required in "$nvim_vendor/init.lua" "$nvim_vendor/palettes/mocha.lua" \
+  "$nvim_vendor/lib/compiler.lua" '.config/nvim/colors/catppuccin-mocha.lua'; do
+  [[ -f "$required" ]] || fail "vendored Catppuccin core is missing $required"
+done
+if [[ -d "$nvim_vendor/groups/integrations" ]]; then
+  fail 'vendored Catppuccin core still ships groups/integrations (vendoring is core-only)'
+fi
+if grep -qE 'auto_integrations[[:space:]]*=[[:space:]]*true' .config/nvim/init.lua; then
+  fail '.config/nvim/init.lua enables auto_integrations but no integration files are vendored'
+fi
+[[ "$CATPPUCCIN_NVIM_COMMIT" =~ ^[0-9a-f]{40}$ ]] \
+  || fail 'versions.env does not pin CATPPUCCIN_NVIM_COMMIT to a full commit sha'
+if [[ -n "$CATPPUCCIN_NVIM_COMMIT" ]]; then
+  grep -q "$CATPPUCCIN_NVIM_COMMIT" "$nvim_vendor/VENDORED.md" \
+    || fail 'VENDORED.md does not record the CATPPUCCIN_NVIM_COMMIT pin'
+fi
+(( failures == 0 )) && pass 'vendored Catppuccin Neovim core is pinned and core-only'
 
 # The documentation promises that the VS Code integrated terminal matches foot.
 # Both files are in-palette independently, so palette membership alone cannot

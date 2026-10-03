@@ -72,6 +72,13 @@ their canonical values. Substituting a different Catppuccin flavor means
 editing the validator's expected table along with the configs, which
 [Theming](THEMING.md) walks through.
 
+Several tools use the official Catppuccin ports rather than local files. Those
+should not be restyled here: edit them only where
+[Theming](THEMING.md#official-ports-and-the-edits-made-to-them) already lists a
+documented substitution, because every other color in them is upstream's and is
+expected to change when the upstream port does. The Neovim port is byte-pinned,
+so its only editable file is `.config/nvim/init.lua`.
+
 ## Optional Flatpaks
 
 Review `.config/fedora-sway-atomic/flatpaks-optional.txt`, remove applications you do not want, then run:

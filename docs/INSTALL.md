@@ -108,6 +108,9 @@ Work through this list before relying on the workstation:
 - `Super+E` opens the power menu, including a working Suspend.
 - `workstation-shell` opens Zsh and `nvim`, `lazygit`, `yazi`, `mise`, and
   `deja` all run.
+- `nvim`, `yazi`, and `eza` open in the Mocha/Sapphire theme rather than their
+  own defaults. Neovim compiles its highlight cache on first launch, so give it
+  a moment before judging the colors.
 - A Vorta backup completes and the archive can be listed.
 
 Two of these are regression guards for bugs fixed in this version; they are
@@ -145,11 +148,15 @@ Then confirm the theme is consistent end to end:
 ```bash
 git diff
 lazygit
+yazi
+eza
+nvim
 ```
 
-`git diff` output and LazyGit both use the Mocha colors from this repository
-rather than Git's own defaults. Run `./scripts/validate-repo.sh` if you changed
-any color by hand.
+`git diff` and LazyGit both use the Mocha colors from this repository rather than
+Git's own defaults. Yazi, eza, and Neovim use the official Catppuccin ports
+listed in [Theming](THEMING.md), pinned rather than fetched at runtime. Run
+`./scripts/validate-repo.sh` if you changed any color by hand.
 
 ## Cleaning up the reboot marker
 

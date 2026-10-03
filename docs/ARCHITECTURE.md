@@ -24,6 +24,14 @@ integrated terminal, and is enforced by `scripts/validate-repo.sh`; see
 [Theming](THEMING.md) for coverage and for the applications that cannot be
 themed from a dotfiles repository.
 
+Where upstream publishes a Catppuccin port, the port is used instead of a local
+file, and it is vendored or pinned rather than fetched at build time: the
+Toolbx image is built offline and must produce the same theme on every build.
+The Neovim port is consequently vendored into the repository as third-party
+code, pinned by commit, and excluded from the repository's own style gates so
+that it stays byte-identical to upstream. See
+[Theming](THEMING.md#official-ports-and-the-edits-made-to-them).
+
 #### Ownership of the session components
 
 The repository does not re-create the whole session. Fedora's

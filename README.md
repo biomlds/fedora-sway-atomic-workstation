@@ -8,6 +8,7 @@ The implementation keeps the immutable host small, installs GUI applications as 
 
 - Fedora's Sway, Waybar, Rofi, Dunst, Foot, Kanshi, Swaylock, and Swayidle stack.
 - Cohesive Catppuccin Mocha/Sapphire configuration for the desktop and terminal tools, including Git, LazyGit, and the VS Code integrated terminal.
+- Official Catppuccin ports where the upstream project publishes one, vendored or pinned rather than fetched at runtime: Neovim, Yazi, eza, LazyGit, bat, VS Code, and qt5ct.
 - A Fedora 44 Toolbx image containing Zsh, Zinit, Deja, zsh-syntax-highlighting, FZF, eza, bat, ripgrep, Neovim, LazyGit, tmux, Yazi, Starship, mise, jq, and tree.
 - Required and optional Flatpak manifests installed system-wide from Flathub. Vorta is the backup client; Borgmatic is deliberately not installed.
 - Idempotent `plan`, `apply`, `check`, and `verify` bootstrap stages.

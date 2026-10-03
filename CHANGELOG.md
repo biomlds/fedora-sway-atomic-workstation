@@ -58,9 +58,38 @@ rebinds without unbinding does not replace the Fedora binding; it adds to it.
   digit shorthand outside CSS.
 - `README.md` no longer claims the theme applies "throughout"; it names the tools
   that cannot be themed and links to the coverage matrix.
+- Neovim's colorscheme is now the official Catppuccin port instead of 15
+  hand-written `nvim_set_hl` calls. The core is vendored at a pinned commit
+  rather than fetched by a plugin manager, because the Toolbx image builds
+  offline and a fetched theme would depend on the network and on whatever
+  version happened to be current.
+- Yazi's theme is now the official Catppuccin port. The previous file used
+  yazi's older theme schema, which current yazi does not read, so parts of it
+  were already inert; the official port uses the current schema and brings the
+  full filetype and Nerd Font icon set with it.
+- eza gained the official Catppuccin port at `~/.config/eza/theme.yml`, which is
+  the path eza reads by default. eza was previously unthemed.
+- qt5ct gained the official Catppuccin Sapphire scheme. This is the color scheme
+  half of the Vorta/KeePassXC story; the environment wiring is still not applied.
+- Foot now carries the `cursor`, `search-box-*` and `jump-labels` entries from
+  the upstream Foot port. Upstream's off-palette selection background and its
+  blue URLs are still rejected, since the accent is Sapphire.
+- The palette validator understands qt5ct's `#aarrggbb` ordering, which is the
+  reverse of the `#rrggbbaa` form Rofi uses. Reading it as the Rofi form turned
+  every legal alpha value in the scheme into a false failure.
 
 ### Added
 
+- `lua/catppuccin/VENDORED.md` recording the pinned Neovim commit, what was
+  removed from it and why, and the command to re-vendor on upgrade.
+- `CATPPUCCIN_NVIM_COMMIT` in `versions.env`, checked by the validator against
+  both a full 40-character commit sha and the pin recorded in `VENDORED.md`.
+- Validation that the vendored Neovim tree is still core-only and still matches
+  its pin: `groups/integrations/` must be absent, `auto_integrations` must not
+  be enabled without it, and `palettes/mocha.lua` must spell out all 26 Mocha
+  values. The vendored files are excluded from the repository hygiene gates,
+  because rewriting third-party code to satisfy a whitespace rule would make the
+  pin meaningless; they are covered by the palette and pin gates instead.
 - `docs/INSTALL.md` covering media verification, Secure Boot, LUKS, yadm,
   deployment, and an acceptance checklist.
 - `docs/HARDENING.md` covering platform guarantees, host-footprint policy,

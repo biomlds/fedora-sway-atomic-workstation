@@ -55,24 +55,20 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
-local mocha = {
-  base = "#1e1e2e", mantle = "#181825", surface0 = "#313244",
-  surface1 = "#45475a", text = "#cdd6f4", subtext0 = "#a6adc8",
-  sapphire = "#74c7ec", blue = "#89b4fa", green = "#a6e3a1",
-  yellow = "#f9e2af", peach = "#fab387", red = "#f38ba8", mauve = "#cba6f7",
-}
-vim.api.nvim_set_hl(0, "Normal", { fg = mocha.text, bg = mocha.base })
-vim.api.nvim_set_hl(0, "NormalFloat", { fg = mocha.text, bg = mocha.mantle })
-vim.api.nvim_set_hl(0, "FloatBorder", { fg = mocha.sapphire, bg = mocha.mantle })
-vim.api.nvim_set_hl(0, "CursorLine", { bg = mocha.surface0 })
-vim.api.nvim_set_hl(0, "LineNr", { fg = mocha.surface1 })
-vim.api.nvim_set_hl(0, "CursorLineNr", { fg = mocha.sapphire, bold = true })
-vim.api.nvim_set_hl(0, "Comment", { fg = mocha.subtext0, italic = true })
-vim.api.nvim_set_hl(0, "String", { fg = mocha.green })
-vim.api.nvim_set_hl(0, "Function", { fg = mocha.blue })
-vim.api.nvim_set_hl(0, "Keyword", { fg = mocha.mauve })
-vim.api.nvim_set_hl(0, "Type", { fg = mocha.yellow })
-vim.api.nvim_set_hl(0, "DiagnosticError", { fg = mocha.red })
-vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = mocha.peach })
-vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = mocha.sapphire })
-vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = mocha.green })
+-- Catppuccin Mocha with Sapphire accent.
+--
+-- The colorscheme itself is the official Catppuccin Neovim port, vendored
+-- under lua/catppuccin/ at the commit pinned in versions.env. See
+-- lua/catppuccin/VENDORED.md for the pin and the upgrade procedure.
+--
+-- auto_integrations = false: we vendor the core only and install none of the
+-- plugins that the integration files theme, so there is nothing to detect.
+require("catppuccin").setup({
+  flavour = "mocha",
+  background = { light = "latte", dark = "mocha" },
+  auto_integrations = false,
+  -- Keep :terminal inside Neovim on the same palette as Foot and VS Code.
+  term_colors = true,
+})
+
+vim.cmd.colorscheme("catppuccin-mocha")

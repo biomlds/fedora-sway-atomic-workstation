@@ -31,32 +31,79 @@ color without adjusting contrast.
 
 ## Coverage
 
-Themed by this repository:
+Themed by this repository. "Official port" means the file is taken from the
+[Catppuccin organisation](https://github.com/catppuccin) rather than written
+here, so it tracks upstream instead of drifting; "local" means this repository
+owns the values.
 
-| Layer | Tools | Config |
+| Layer | Tool | Config | Source |
+| --- | --- | --- | --- |
+| Compositor | Sway (borders, focus, background) | `10-theme.conf` | local |
+| Panel | Waybar | `style.css` | local |
+| Launchers | Rofi | `config.rasi`, `catppuccin-mocha-sapphire.rasi` | local |
+| Notifications | Dunst | `dunstrc` | local |
+| Lock screen | Swaylock | `config` | local |
+| Terminal | Foot | `foot.ini` | local, on the official palette |
+| Terminal UI | tmux | `tmux.conf` | local |
+| Shell | Zsh, FZF | `.zshrc` | local |
+| Prompt | Starship | `starship.toml` | local |
+| Editor | Neovim | `init.lua` + `lua/catppuccin/` | **official port**, vendored |
+| File manager | Yazi | `theme.toml` | **official port** |
+| File listing | eza | `~/.config/eza/theme.yml` | **official port** |
+| Pager | bat | `Catppuccin Mocha.tmTheme` | **official port** |
+| Git | diff, status, branches | `.gitconfig` | local |
+| Git TUI | LazyGit | `config.yml` | **official port** |
+| Editor | VS Code | `.var/app/.../Code/User/settings.json` | **official port** |
+| Qt (non-Flatpak) | any Qt5 application | `qt5ct/qt5ct.conf` + `colors/…` | **official port** |
+| Qt (KDE apps) | any KDE application | `kdeglobals` | local |
+
+### Official ports and the edits made to them
+
+Five files are taken from upstream. Three needed a change to keep the
+repository strictly palette-only; the rest are verbatim.
+
+| File | Upstream | Change |
 | --- | --- | --- |
-| Compositor | Sway (borders, focus, background) | `10-theme.conf` |
-| Panel | Waybar | `style.css` |
-| Launchers | Rofi | `config.rasi`, `catppuccin-mocha-sapphire.rasi` |
-| Notifications | Dunst | `dunstrc` |
-| Lock screen | Swaylock | `config` |
-| Terminal | Foot | `foot.ini` |
-| Terminal UI | tmux | `tmux.conf` |
-| Shell | Zsh, FZF | `.zshrc` |
-| Prompt | Starship | `starship.toml` |
-| Editor | Neovim | `init.lua` |
-| File manager | Yazi | `theme.toml` |
-| Pager | bat | `Catppuccin Mocha.tmTheme` |
-| Git | diff, status, branches | `.gitconfig` |
-| Git TUI | LazyGit | `config.yml` |
-| Editor | VS Code | `.var/app/.../Code/User/settings.json` |
-| Qt (non-Flatpak) | any Qt application | `kdeglobals` |
+| `lua/catppuccin/` | [catppuccin/nvim](https://github.com/catppuccin/nvim) @ `edefef77` | `groups/integrations/` dropped; see below |
+| `theme.toml` (Yazi) | [catppuccin/yazi](https://github.com/catppuccin/yazi) | `syntect_theme` removed; `progress_label` white → `text` |
+| `theme.yml` (eza) | [catppuccin/eza](https://github.com/catppuccin/eza) | none |
+| `config.yml` (LazyGit) | [catppuccin/lazygit](https://github.com/catppuccin/lazygit) | none |
+| `colors/…sapphire.conf` (qt5ct) | [catppuccin/qt5ct](https://github.com/catppuccin/qt5ct) | four values mapped onto the palette |
+
+Three of these deserve spelling out.
+
+**Neovim is vendored, not installed.** The Toolbx image is built offline, so a
+plugin manager fetching a colorscheme at build time would make the theme
+depend on the network and on whatever version happened to be current. The core
+is copied into `.config/nvim/lua/catppuccin/` at the commit recorded as
+`CATPPUCCIN_NVIM_COMMIT` in `versions.env`, and it is byte-identical to
+upstream; `lua/catppuccin/VENDORED.md` records the pin and the upgrade command.
+`groups/integrations/` was deleted because no plugin that those files theme is
+installed, and `init.lua` sets `auto_integrations = false` so they would never
+be loaded anyway. That removes 288 KiB of dead code.
+
+**qt5ct writes `#AARRGGBB`, not `#RRGGBBAA`.** Two hex digits of alpha come
+first. The validator knows the difference, and four upstream values are not
+Mocha colours, so they are mapped onto the nearest palette entry: pure white →
+`text`, a desaturated `subtext0` → `overlay0`, and a desaturated `surface2` →
+`surface1`. The one semi-transparent entry, alpha `80` over `overlay0`, is kept
+as-is because the translucency is the point.
+
+**Sway, Foot, tmux, Waybar and Rofi have no Sapphire port.** Upstream ships a
+single blue-accent file for each of these, so adopting them wholesale would
+replace the Sapphire accent that the rest of the desktop is built on. They stay
+local, on the official palette, and adopt upstream values selectively where they
+are genuinely better: `foot.ini` now carries upstream's `cursor`,
+`search-box-*` and `jump-labels` entries. Upstream's Foot selection background
+is off-palette and upstream's tmux port swaps `subtext0` and `subtext1`; both
+are rejected.
 
 Two palette definitions are checked for **drift** rather than merely for valid
 colors, because a value swapped for a different palette member would otherwise
 pass unnoticed: `10-theme.conf` and the `[palettes.catppuccin_mocha]` block in
-`starship.toml` must both spell out all 26 names with the values above.
-Neovim's `mocha` table is checked the same way but may carry a subset.
+`starship.toml` must both spell out all 26 names with the values above. The
+vendored `lua/catppuccin/palettes/mocha.lua` is checked the same way, and must
+carry all 26. Every other theme file is only checked for palette membership.
 
 ## Gaps
 
@@ -78,7 +125,11 @@ Both are required Flatpaks and both are Qt applications, so neither picks up
 KeePassXC additionally ships only Light, Dark, and System; it has no
 Catppuccin theme and no color customization. Vorta has no dark mode at all.
 
-The likely route, **unverified on this configuration**, is a color scheme plus:
+The palette for the qt5ct route now ships, at
+`~/.config/qt5ct/colors/catppuccin-mocha-sapphire.conf` with
+`~/.config/qt5ct/qt5ct.conf` selecting it. What is still missing is the wiring,
+and that is deliberate. The likely route, **unverified on this configuration**,
+is:
 
 ```bash
 flatpak override --user \
@@ -89,8 +140,10 @@ flatpak override --user \
 
 This depends on the `qt6ct` platform theme plugin being present in the
 application's Qt runtime, which cannot be assumed, so it is deliberately not
-wired into the bootstrap. For KeePassXC, select its built-in **Dark** theme
-instead; that is the reliable option.
+wired into the bootstrap. Note also that the theme file is a **qt5ct** scheme;
+whether a given application links Qt5 or Qt6 decides whether it can read it at
+all, and that was not determined here. For KeePassXC, select its built-in
+**Dark** theme instead; that is the reliable option.
 
 ### Brave and Obsidian
 
@@ -135,12 +188,14 @@ palette is recorded. To switch flavor deliberately:
    renaming it to match, for example `FRAPPE`.
 2. Update the `set $name` block in `10-theme.conf`.
 3. Update `[palettes.catppuccin_mocha]` in `starship.toml`.
-4. Update the `mocha` table in `init.lua`.
-5. Run `./scripts/validate-repo.sh`.
+4. Re-vendor the Neovim core, or accept that Neovim keeps the old flavor.
+5. Update the four substituted values in the Yazi and qt5ct ports, which are
+   hand-edited precisely so that they stay in-palette.
+6. Run `./scripts/validate-repo.sh`.
 
-Sway's `#rrggbb` values, `foot.ini` bare hex, `rgba()` decimals, and the eight
-digit `#rrggbbaa` form used by Rofi are all understood by the validator, so a
-partial edit cannot pass.
+Sway's `#rrggbb` values, `foot.ini` bare hex, `rgba()` decimals, the eight digit
+`#rrggbbaa` form used by Rofi, and the eight digit `#aarrggbb` form used by
+qt5ct are all understood by the validator, so a partial edit cannot pass.
 
 ## Related
 
