@@ -6,6 +6,15 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Fixed
 
+- The Toolbx image build no longer blocks every push. Nothing consumes the CI
+  job's output: it builds with `push: false` under a throwaway `:ci` tag, there
+  is no registry anywhere in the repository, and `TOOLBOX_IMAGE` is a `localhost/`
+  tag by design. The image that is actually used is built locally by
+  `workstation-bootstrap apply`, which also prints the full build output when
+  something breaks. The job now runs on a weekly schedule and on manual
+  dispatch, with a GHA build cache so a no-op rebuild reuses the cargo stages.
+  Static validation and the secret scan still run on every push and are what
+  catch pin drift, in seconds rather than minutes.
 - The Toolbx image did not build. `deja` was installed with
   `go install github.com/Giammarco-Ferranti/deja/cmd/deja@v0.4.2`, but its
   `go.mod` declares `module github.com/giammarcoferranti/deja`, and Go requires

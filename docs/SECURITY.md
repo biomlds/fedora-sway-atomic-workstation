@@ -39,7 +39,7 @@ Store secrets in KeePassXC, use SSH agents where appropriate, and keep an offlin
 - eza, Starship, and Yazi are compiled from locked, pinned Rust crates in a separate builder stage.
 - Zinit and zsh-syntax-highlighting are fetched by commit SHA rather than by tag, because a tag can be moved to point at different content. `.git` metadata is removed from the runtime image.
 - The Nerd Font installer verifies the release archive against `NERD_FONT_SHA256` pinned in this repository. It deliberately does not fetch the release's own checksum file, since a digest published alongside the artifact it protects does not protect it.
-- CI rebuilds the Toolbx image and verifies the required command inventory.
+- CI rebuilds the Toolbx image and verifies the required command inventory. This runs weekly or on manual dispatch rather than on every push, because the build compiles several tools from source and its output is discarded; the image that is actually used is built locally by `workstation-bootstrap apply`.
 - A CI job scans the Git history for common secret patterns. This is a backstop, not a guarantee.
 - Flatpak IDs are validated with `flatpak remote-info --system flathub` during deep verification.
 

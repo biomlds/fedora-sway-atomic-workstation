@@ -13,7 +13,7 @@ The implementation keeps the immutable host small, installs GUI applications as 
 - Required and optional Flatpak manifests installed system-wide from Flathub. Vorta is the backup client; Borgmatic is deliberately not installed.
 - Idempotent `plan`, `apply`, `check`, and `verify` bootstrap stages.
 - Installation, hardening, recovery, operations, security, architecture, customization, and hardware documentation.
-- Static validation and CI, including a Toolbx image build smoke test and a repository history secret scan.
+- Static validation and CI, including a repository history secret scan on every push, and a Toolbx image build smoke test on a weekly schedule or on demand.
 
 ## Repository target
 

@@ -24,10 +24,17 @@ Keep the previous deployment until Sway login, networking, audio, graphics, and 
 ## Updating Toolbx
 
 `.config/fedora-sway-atomic/versions.env` is the single source of truth for
-Toolbx pins. CI builds the image from that file, and `./scripts/validate-repo.sh`
-fails if the `ARG` defaults in `toolbox/Containerfile` drift from it. Update the
-Containerfile defaults in the same change, or keep them and let the validator
-tell you.
+Toolbx pins. `./scripts/validate-repo.sh` fails if the `ARG` defaults in
+`toolbox/Containerfile` drift from it, on every push. Update the Containerfile
+defaults in the same change, or keep them and let the validator tell you.
+
+The build itself is local: `workstation-bootstrap apply` runs `podman build` and
+`toolbox create`, and its full output is what you read when something breaks.
+CI builds the same image weekly or on manual dispatch purely as a canary. It
+pushes nothing and tags a throwaway `:ci` image, because there is no registry:
+`TOOLBOX_IMAGE` is a `localhost/` tag by design. Pin changes that only CI would
+notice, such as a tool that no longer compiles, therefore surface on your next
+`apply` rather than on the push.
 
 1. Update the pin in `.config/fedora-sway-atomic/versions.env`, and the matching
    `ARG` default in `toolbox/Containerfile`.

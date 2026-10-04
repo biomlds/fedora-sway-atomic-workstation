@@ -5,12 +5,21 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # The image build is slow, because rust-builder compiles eza, starship, and
+  # yazi from source. Nothing consumes its output: it is built with push:false
+  # under a throwaway :ci tag, and the image actually used is the podman one
+  # built by .local/share/fedora-sway-atomic/bootstrap-lib.sh. So it runs on a
+  # schedule and on demand rather than blocking every push. The two cheap jobs
+  # still run per push, and they are what catch pin drift.
+  schedule:
+    - cron: '17 4 * * 1'
 
 permissions:
   contents: read
 
 jobs:
   static:
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +29,7 @@ jobs:
         run: ./scripts/validate-repo.sh
 
   toolbox-image:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +65,12 @@ jobs:
           load: true
           tags: localhost/biomlds/workstation-toolbox:ci
           build-args: ${{ steps.pins.outputs.args }}
+          # Without a cache every scheduled run rebuilds all three stages from
+          # scratch, including the cargo builds. mode=max also keeps the
+          # go-builder and rust-builder stages, which nothing final depends on
+          # directly, so the two most expensive stages survive a no-op rebuild.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Smoke-test CLI inventory
         run: >-
           docker run --rm --entrypoint /bin/bash
@@ -62,6 +78,7 @@ jobs:
           'set -e; for c in zsh git fzf eza bat rg nvim lazygit tmux yazi starship mise jq tree deja; do command -v "$c"; done; test -r /usr/local/share/zinit/zinit.zsh; test -r /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh'
 
   secret-scan:
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
