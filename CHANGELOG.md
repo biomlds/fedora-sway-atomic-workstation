@@ -57,6 +57,17 @@ All notable changes are documented here. The project follows Semantic Versioning
   `rpm-ostree install yadm` instruction, malformed yadm pins, and host manifest
   entries that are not plausible Fedora package names.
 
+### Changed
+
+- bat now uses the official Catppuccin port, which is roughly 25 times the size
+  of the hand-written theme it replaces: 187 scopes against 10, and 65,906 bytes
+  against 2,591. The old file was labelled an official port in the documentation
+  but had never been one. Two colour values changed, both recorded in the file's
+  own header: the 18 accent occurrences become Sapphire, and upstream's
+  off-palette `findHighlight` is mapped to `surface2`. Upstream's heading
+  gradient is also now uniform, since its heading 5 was already Sapphire in the
+  file named for Blue. `docs/THEMING.md` records both edits.
+
 ### Removed
 
 - Seven host packages that can never be layered: `sway`, `brightnessctl`,
