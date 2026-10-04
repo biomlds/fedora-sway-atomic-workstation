@@ -6,6 +6,18 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Fixed
 
+- Volume, mute, and brightness keys lost their on-screen display. The repository
+  rebound all six keys to bare `brightnessctl` and `wpctl` calls with a hardcoded
+  5% step, replacing Fedora's `volume-helper` and brightness snippets. Those
+  snippets show the level on screen and read `$volume_limit`, `$volume_step`, and
+  `$brightness_step`, none of which this repository defined. Volume and brightness
+  are now delegated to `/etc/sway/config.d/60-bindings-volume.conf` and
+  `60-bindings-brightness.conf`. Media keys stay rebound, since they gain the
+  `--locked` workaround and have no equivalent upstream behaviour to lose.
+- The volume and Waybar bindings called `wpctl`, which ships with WirePlumber.
+  Nothing in `sway-config-fedora` requires WirePlumber, while `pulseaudio-utils`
+  is a hard requirement, so those commands could be absent on a stock image.
+  Both now use `pactl`, matching Fedora's own volume snippet.
 - First installation could not complete. `host-packages.txt` listed `yadm` as a
   host package, but Fedora ships no `yadm` package in Fedora or Fedora EPEL, so
   `rpm-ostree install yadm` failed and `rpm-ostree` rejected the whole host-layer
@@ -21,11 +33,24 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Added
 
+- Volume and brightness rows in the Architecture ownership table, plus the
+  rationale for delegating them instead of restating Fedora's OSD and step
+  handling locally.
+- A note in Hardening and in the manifest explaining that packages the
+  `sway-config-fedora` spec hard-Requires are deliberately absent, and why
+  `foot`, `libnotify`, `rofi-wayland`, `dunst`, and `kanshi` still need layering.
 - Pre-clone yadm installation steps in `docs/INSTALL.md` and `docs/RECOVERY.md`,
   including the digest check and the reason Fedora cannot supply yadm.
 - Repository checks that reject `yadm` in the host package manifest, a stale
   `rpm-ostree install yadm` instruction, malformed yadm pins, and host manifest
   entries that are not plausible Fedora package names.
+
+### Removed
+
+- Seven host packages that can never be layered: `sway`, `brightnessctl`,
+  `grimshot`, `playerctl`, `swayidle`, `swaylock`, and `waybar`. All seven are
+  hard `Requires` of `sway-config-fedora`, so `rpm -q` always reported them as
+  present. The manifest now describes 14 real layers instead of claiming 21.
 
 ## 1.1.0 - 2026-10-03
 

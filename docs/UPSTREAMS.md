@@ -1,9 +1,10 @@
 # Upstream references
 
 - Fedora Sway config packaging (source of /etc/sway/config and /etc/sway/config.d): https://gitlab.com/fedora/sigs/sway/sway-config-fedora
+- sway-config-fedora RPM spec: its Requires and Recommends are the authority for what the base image already provides, and therefore for what belongs in host-packages.txt: https://src.fedoraproject.org/rpms/sway-config-fedora
 - Sway upstream config.in (shows the include @sysconfdir@/sway/config.d/* convention): https://github.com/swaywm/sway/blob/master/config.in
 - sway(5), which defines unbindsym flag matching: https://man.archlinux.org/man/sway.5.en
-These sources define the behavior assumed by the repository and should be reviewed when component versions change.
+These sources define the behavior assumed by the repository and should be reviewed when component versions change. The Fedora Sway Atomic product page is *not* a substitute for the spec: it advertises `light`, `imv`, `Thunar`, `dunst`, and `kanshi`, but upstream requires none of them and uses `brightnessctl` rather than `light` for backlight.
 
 - Fedora Sway configuration guide: https://docs.fedoraproject.org/en-US/atomic-desktops/sway-configuration-guide/
 - Fedora Atomic installation: https://docs.fedoraproject.org/en-US/atomic-desktops/installation/

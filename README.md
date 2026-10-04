@@ -103,12 +103,14 @@ The Toolbx name is versioned. Rebuilding a newer version never silently destroys
 | `Super+1` … `Super+0` | Switch workspace |
 | `Super+Shift+1` … `Super+Shift+0` | Move container to workspace |
 
-Volume, media, and brightness keys are also rebound in
-`.config/sway/config.d/60-bindings-fsa.conf`.
+Media keys are rebound in `.config/sway/config.d/60-bindings-fsa.conf`, which
+adds the `--locked` workaround for `XF86AudioPlay`/`Next`/`Prev`.
 
-Waybar, swayidle, and the `Alt`/`Ctrl+Print` screenshots are owned by Fedora's
-own Sway snippets, not by this repository. The ownership table is in
-[Architecture](docs/ARCHITECTURE.md).
+Waybar, swayidle, the `Alt`/`Ctrl+Print` screenshots, and the volume and
+brightness keys are owned by Fedora's own Sway snippets, not by this repository.
+Delegating volume and brightness keeps Fedora's on-screen display and its
+`$volume_limit`, `$volume_step`, and `$brightness_step` settings. The ownership
+table is in [Architecture](docs/ARCHITECTURE.md).
 
 ## Design constraints
 

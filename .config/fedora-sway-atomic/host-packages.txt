@@ -2,23 +2,26 @@
 # with rpm-ostree, which aborts on the first unresolvable name. The dotfile
 # manager itself (yadm) is deliberately absent because Fedora ships no yadm
 # package; it is installed as a digest-pinned script. See docs/INSTALL.md.
+#
+# Packages already guaranteed by the base image are deliberately absent. The
+# sway-config-fedora spec hard-Requires sway, brightnessctl, grimshot, playerctl,
+# swayidle, swaylock, and waybar, so listing them would describe a layer that can
+# never be created. The survivors below are the ones the image does not promise:
+#   - foot, libnotify, rofi-wayland are only Recommends, so they can be missing
+#   - dunst and kanshi are not mentioned upstream at all, despite appearing on
+#     the Fedora Sway Atomic product page
+#   - wl-clipboard, grim, slurp, NetworkManager-tui, jq, curl, unzip, fontconfig,
+#     and flatpak are not pulled in by the Sway config package
 # Packages are layered only when absent from the booted Fedora deployment.
-sway
-waybar
 rofi-wayland
 dunst
 foot
 kanshi
-swaylock
-swayidle
-brightnessctl
-playerctl
-NetworkManager-tui
 wl-clipboard
 grim
 slurp
-grimshot
 libnotify
+NetworkManager-tui
 jq
 curl
 unzip

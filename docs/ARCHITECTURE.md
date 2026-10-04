@@ -49,14 +49,26 @@ split explicitly:
 | Waybar | Fedora | `/etc/sway/config.d/90-bar.conf`, `bar { swaybar_command waybar }` |
 | swayidle | Fedora | `/etc/sway/config.d/90-swayidle.conf` |
 | Screenshots (Alt/Ctrl+Print) | Fedora | `/etc/sway/config.d/60-bindings-screenshot.conf`, `grimshot` |
+| Volume and mute keys | Fedora | `/etc/sway/config.d/60-bindings-volume.conf`, `/usr/libexec/sway/volume-helper` |
+| Brightness keys | Fedora | `/etc/sway/config.d/60-bindings-brightness.conf`, `brightnessctl` |
 | Idle timeouts | this repository | `$lock_timeout` / `$screen_timeout` in `15-timeouts-fsa.conf` |
 | Dunst, Kanshi | this repository | `90-autostart-fsa.conf` |
-| Theme, key bindings, window rules | this repository | `10-`, `20-`, `60-`, `99-` snippets |
+| Theme, media key bindings, window rules | this repository | `10-`, `20-`, `60-`, `99-` snippets |
 
 Consequences worth knowing:
 
+- Volume and brightness are delegated rather than rebound because Fedora's
+  snippets carry behaviour a replacement would silently drop:
+  `volume-helper` shows an OSD and honours `$volume_limit` and `$volume_step`,
+  and the brightness snippet shows an OSD and honours `$brightness_step`. A local
+  override would have to restate all of that to avoid a regression.
+- The delegation also avoids a dependency the base image does not promise. The
+  repo uses `pactl` from `pulseaudio-utils`, which `sway-config-fedora` requires;
+  `wpctl` belongs to WirePlumber, which nothing in the Sway config requires.
 - A single `unbindsym` only removes a binding made with the same flags, so
   `60-bindings-fsa.conf` mirrors `--locked` when unbinding a `--locked` binding.
+  After the delegation above, this only applies to the media keys: Fedora binds
+  `XF86AudioPlay` with `--locked` and the rest without.
 - Fedora's `90-swayidle.conf` passes timeouts on the command line, so a
   `~/.config/swayidle/config` would be ignored. The idle policy is expressed as
   sway variables instead.

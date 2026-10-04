@@ -29,6 +29,13 @@ systemctl is-enabled firewalld
 Every entry in `.config/fedora-sway-atomic/host-packages.txt` adds a host layer.
 Each one is a package that will not roll back with `rpm-ostree rollback`.
 
+The manifest deliberately omits packages the base image already guarantees. The
+`sway-config-fedora` spec hard-Requires sway, brightnessctl, grimshot,
+playerctl, swayidle, swaylock, and waybar, so listing them would promise a layer
+that can never be created and would overstate the footprint. `foot`,
+`libnotify`, and `rofi-wayland` are only `Recommends`, and `dunst` and `kanshi`
+are not mentioned upstream at all, so those five are listed and layered.
+
 The split is deliberate:
 
 - GUI applications belong in Flatpak, not on the host.
