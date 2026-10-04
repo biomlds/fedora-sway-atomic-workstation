@@ -31,6 +31,7 @@ required_files=(
   .gitconfig .gitignore .config/yadm/skip .config/lazygit/config.yml
   .config/kdeglobals
   .config/eza/theme.yaml .config/qt5ct/qt5ct.conf
+.config/zsh/themes/catppuccin-mocha.zsh
   .config/qt5ct/colors/catppuccin-mocha-sapphire.conf
   .config/nvim/init.lua .config/nvim/colors/catppuccin-mocha.lua
   .config/nvim/lua/catppuccin/init.lua .config/nvim/lua/catppuccin/VENDORED.md
@@ -347,6 +348,7 @@ THEME_FILES = [
     '.config/kdeglobals',
     '.gitconfig',
     '.config/eza/theme.yaml',
+    '.config/zsh/themes/catppuccin-mocha.zsh',
     '.config/qt5ct/qt5ct.conf',
     '.config/qt5ct/colors/catppuccin-mocha-sapphire.conf',
     '.var/app/com.visualstudio.code/config/Code/User/settings.json',
@@ -494,6 +496,38 @@ if [[ -n "$CATPPUCCIN_NVIM_COMMIT" ]]; then
     || fail 'VENDORED.md does not record the CATPPUCCIN_NVIM_COMMIT pin'
 fi
 (( failures == 0 )) && pass 'vendored Catppuccin Neovim core is pinned and core-only'
+
+# The zsh-syntax-highlighting Catppuccin theme is vendored for the same reason,
+# and pinned the same way. Two things about it are easy to break silently, so
+# both are checked. First, sourcing order: zsh-syntax-highlighting builds its
+# highlighters when it loads and ignores style assignments made afterwards, so
+# sourcing the theme second leaves every command in the plugin's stock colours
+# while still exiting cleanly. Second, the pin has to stay recorded.
+zsh_theme='.config/zsh/themes/catppuccin-mocha.zsh'
+[[ -f "$zsh_theme" ]] || fail "vendored Catppuccin zsh theme is missing $zsh_theme"
+if [[ -f "$zsh_theme" ]]; then
+  grep -q 'ZSH_HIGHLIGHT_HIGHLIGHTERS=' "$zsh_theme" \
+    || fail 'vendored Catppuccin zsh theme does not set ZSH_HIGHLIGHT_HIGHLIGHTERS'
+fi
+zshrc='.config/zsh/.zshrc'
+if [[ -f "$zshrc" ]]; then
+  theme_line=$(grep -n 'themes/catppuccin-mocha.zsh' "$zshrc" | head -1 | cut -d: -f1)
+  plugin_line=$(grep -n 'zsh-syntax-highlighting\.zsh' "$zshrc" | head -1 | cut -d: -f1)
+  if [[ -z "$theme_line" ]]; then
+    fail '.config/zsh/.zshrc never sources the Catppuccin zsh theme'
+  elif [[ -z "$plugin_line" ]]; then
+    fail '.config/zsh/.zshrc no longer sources zsh-syntax-highlighting'
+  elif (( theme_line >= plugin_line )); then
+    fail ".config/zsh/.zshrc sources the Catppuccin zsh theme on line $theme_line, at or after the plugin on line $plugin_line; styles set after the plugin loads are ignored"
+  fi
+fi
+[[ "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" =~ ^[0-9a-f]{40}$ ]] \
+  || fail 'versions.env does not pin CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT to a full commit sha'
+if [[ -n "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" && -f "$zsh_theme" ]]; then
+  grep -q "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" "$zsh_theme" \
+    || fail 'the vendored Catppuccin zsh theme does not record the pinned commit'
+fi
+(( failures == 0 )) && pass 'vendored Catppuccin zsh theme is pinned and sourced before the plugin'
 
 # The documentation promises that the VS Code integrated terminal matches foot.
 # Both files are in-palette independently, so palette membership alone cannot

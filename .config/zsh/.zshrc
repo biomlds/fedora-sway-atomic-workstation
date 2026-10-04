@@ -30,6 +30,15 @@ if [[ -r /usr/local/share/zinit/zinit.zsh ]]; then
   source /usr/local/share/zinit/zinit.zsh
 fi
 
+# The Catppuccin zsh-syntax-highlighting theme has to be sourced before
+# zsh-syntax-highlighting itself. That plugin builds its highlighters when it
+# loads, and style assignments made after that point are silently ignored, so
+# the order here is load-bearing rather than stylistic. Sourcing it second
+# looks correct and leaves every command the plugin's stock colours.
+if [[ -r ${ZDOTDIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh}/themes/catppuccin-mocha.zsh ]]; then
+  source ${ZDOTDIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh}/themes/catppuccin-mocha.zsh
+fi
+
 if [[ -r /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
