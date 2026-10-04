@@ -8,6 +8,8 @@ These sources define the behavior assumed by the repository and should be review
 - Fedora Sway configuration guide: https://docs.fedoraproject.org/en-US/atomic-desktops/sway-configuration-guide/
 - Fedora Atomic installation: https://docs.fedoraproject.org/en-US/atomic-desktops/installation/
 - yadm bootstrap: https://yadm.io/docs/bootstrap
+- yadm installation (states that RPM distributions are served from openSUSE Build Service rather than Fedora): https://yadm.io/docs/install#download
+- yadm upstream source, pinned by commit rather than by a moving branch: https://github.com/yadm-dev/yadm
 - Toolbx documentation: https://containertoolbx.org/doc/
 - Toolbx create reference: https://github.com/containers/toolbox/blob/main/doc/toolbox-create.1.md
 - Catppuccin palette: https://github.com/catppuccin/catppuccin
@@ -39,5 +41,7 @@ If any of these change upstream, re-check the session ownership table in [Archit
 Toolbx pins live in exactly one place, `.config/fedora-sway-atomic/versions.env`. The Containerfile repeats them as `ARG` defaults so it can also be built standalone, and `./scripts/validate-repo.sh` fails when the two disagree.
 
 Currently pinned: Fedora 44, Nerd Fonts 3.5.1, Deja v0.4.2, LazyGit v0.65.1, eza 0.23.5, Starship 1.26.0, Yazi 26.9.1, Zinit v3.17.0 (db9e267), zsh-syntax-highlighting 0.8.0 (db085e4), and mise v2026.9.14.
+
+yadm itself is pinned outside the Toolbx image, because it runs on the host rather than inside a container: yadm 3.5.0 at commit 7eabaee84c8bd9521e56966e5c88e7a435fdd9c7 with SHA-256 d8c2d661725b98e9910e4a59b58beed5cfb01f5196a825a08668ff0887f7441d. Pin by commit, not by tag or branch: yadm's `develop` branch is not byte-identical to its `3.5.0` tag, and it publishes no release assets, so a branch or release URL would silently change the tool under a reader. The same three values are repeated in [Installation](INSTALL.md#4-install-yadm) for the pre-clone step; `scripts/validate-repo.sh` fails if they drift apart.
 
 The image package transaction records exact Fedora RPM versions in the resulting OCI image metadata; rebuilding against changed Fedora repositories may produce a different RPM set, so publish immutable image digests if distributing prebuilt images. See [Hardening](HARDENING.md).

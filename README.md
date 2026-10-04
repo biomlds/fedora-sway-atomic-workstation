@@ -27,24 +27,28 @@ If you choose another repository name, update `YADM_REPOSITORY` in `.config/fedo
 
 ## First installation
 
-The operating system install is covered in detail in the [installation guide](docs/INSTALL.md). In short: install Fedora Sway Atomic with LUKS full-disk encryption, create the user account, boot the installed deployment, then run:
+Fedora ships no `yadm` package, so it is installed as a digest-pinned script in
+`~/.local/bin` rather than layered onto the deployment. See
+[installation step 4](docs/INSTALL.md#4-install-yadm) for the exact commands. In
+short: install Fedora Sway Atomic with LUKS full-disk encryption, create the
+user account, boot the installed deployment, install yadm as described there,
+then run:
 
 ```bash
-sudo rpm-ostree install yadm
-systemctl reboot
-
 yadm clone https://github.com/biomlds/fedora-sway-atomic-workstation.git --bootstrap
 ```
 
 The yadm bootstrap delegates to `~/.local/bin/workstation-bootstrap apply`. The apply stage:
 
-1. confirms the Atomic/Fedora environment;
-2. layers only missing host integration packages;
-3. confirms the Flathub system remote that Atomic provides by default;
-4. installs required Flatpaks system-wide;
-5. installs the pinned JetBrains Mono Nerd Font against a repository-pinned SHA-256 digest;
-6. builds the pinned Toolbx image and creates a versioned container;
-7. runs local checks and reports whether a reboot is required.
+1. installs or repairs the pinned yadm script against its SHA-256 digest;
+2. confirms the Atomic/Fedora environment;
+3. layers only missing host integration packages, reporting any name that no
+   Fedora package provides instead of aborting the run;
+4. confirms the Flathub system remote that Atomic provides by default;
+5. installs required Flatpaks system-wide;
+6. installs the pinned JetBrains Mono Nerd Font against a repository-pinned SHA-256 digest;
+7. builds the pinned Toolbx image and creates a versioned container;
+8. runs local checks and reports whether a reboot is required.
 
 `apply` requires `sudo` for rpm-ostree layering and system-wide Flatpak
 installation.

@@ -24,10 +24,26 @@ systemctl reboot
 
 ### 2. Install yadm
 
+Fedora ships no `yadm` package, so it cannot be layered with `rpm-ostree`. Install the digest-pinned script instead:
+
 ```bash
-sudo rpm-ostree install yadm
-systemctl reboot
+YADM_VERSION=3.5.0
+YADM_COMMIT=7eabaee84c8bd9521e56966e5c88e7a435fdd9c7
+YADM_SHA256=d8c2d661725b98e9910e4a59b58beed5cfb01f5196a825a08668ff0887f7441d
+
+tmp=$(mktemp -d)
+curl --fail --location --silent --show-error --retry 3 \
+  "https://raw.githubusercontent.com/yadm-dev/yadm/${YADM_COMMIT}/yadm" \
+  -o "$tmp/yadm"
+printf '%s  %s\n' "$YADM_SHA256" "$tmp/yadm" | sha256sum --check
+install -Dm0755 "$tmp/yadm" "$HOME/.local/bin/yadm"
+rm -rf "$tmp"
+yadm version
 ```
+
+Do not proceed unless `sha256sum` reports `OK`. If `~/.local/bin/yadm` is later
+deleted or edited, `workstation-bootstrap apply` restores the pinned copy on its
+own. See [Installation](INSTALL.md#4-install-yadm) for the rationale.
 
 ### 3. Restore configuration
 

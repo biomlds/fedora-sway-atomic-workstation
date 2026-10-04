@@ -55,14 +55,43 @@ for a normal working session.
 
 ## 4. Install yadm
 
+Fedora ships **no** `yadm` package, in Fedora itself or in Fedora EPEL, so
+`rpm-ostree install yadm` cannot work and is not used here. Upstream's own
+[installation page](https://yadm.io/docs/install#download) points RPM
+distributions at the openSUSE Build Service instead; adding a third-party
+repository to the ostree deployment is avoided. yadm is therefore installed as
+a digest-pinned script in `~/.local/bin`.
+
+This step must work before this repository is cloned, so it cannot call a
+helper from the repository. Run it verbatim:
+
 ```bash
-sudo rpm-ostree install yadm
-systemctl reboot
+YADM_VERSION=3.5.0
+YADM_COMMIT=7eabaee84c8bd9521e56966e5c88e7a435fdd9c7
+YADM_SHA256=d8c2d661725b98e9910e4a59b58beed5cfb01f5196a825a08668ff0887f7441d
+
+tmp=$(mktemp -d)
+curl --fail --location --silent --show-error --retry 3 \
+  "https://raw.githubusercontent.com/yadm-dev/yadm/${YADM_COMMIT}/yadm" \
+  -o "$tmp/yadm"
+printf '%s  %s\n' "$YADM_SHA256" "$tmp/yadm" | sha256sum --check
+install -Dm0755 "$tmp/yadm" "$HOME/.local/bin/yadm"
+rm -rf "$tmp"
+yadm version
 ```
 
-yadm is a host package because it manages the configuration in the home
-directory and must exist before that directory is populated. This is one of the
-few justified host-layer additions.
+`sha256sum` must print `yadm: OK` before the script is installed. If it reports
+`FAILED`, stop and investigate: the download did not match the pin, so do not
+continue. The final command should report `yadm version 3.5.0`.
+
+`apply` re-verifies the installed script against the same digest and reinstalls
+it if it is missing or has drifted, so this step only has to succeed once.
+
+The commit is pinned rather than a release tag because yadm's `develop` branch
+moves independently of its tags; the script at `develop` is not byte-identical to
+the `3.5.0` tag. The pinned values are mirrored in
+`.config/fedora-sway-atomic/versions.env` and `scripts/validate-repo.sh` fails if
+they disagree with this page.
 
 ## 5. Apply this repository
 

@@ -71,6 +71,27 @@ together:
 git ls-remote https://github.com/zdharma-continuum/zinit.git refs/tags/v3.17.0
 ```
 
+### Changing the yadm version
+
+`YADM_COMMIT` is a commit SHA and `YADM_SHA256` is the digest of the single
+`yadm` script at that commit. There is no release asset to download, so resolve
+the tag, fetch the script by commit, and digest it:
+
+```bash
+git ls-remote https://github.com/yadm-dev/yadm.git refs/tags/3.6.0
+curl --fail --location --silent --show-error \
+  https://raw.githubusercontent.com/yadm-dev/yadm/COMMIT/yadm -o /tmp/yadm
+sha256sum /tmp/yadm
+grep -m1 '^VERSION=' /tmp/yadm
+```
+
+Confirm `VERSION=` matches the tag you resolved, then update `YADM_VERSION`,
+`YADM_COMMIT`, and `YADM_SHA256` in `.config/fedora-sway-atomic/versions.env`
+*and* the same three values in `docs/INSTALL.md` and `docs/RECOVERY.md`, which
+are the pre-clone instructions and cannot reference this repository. The
+validator fails when the copies disagree. Run `workstation-bootstrap apply` to
+replace the installed script, then confirm `yadm version`.
+
 ## Updating Flatpaks
 
 ```bash
@@ -141,3 +162,17 @@ systemctl reboot
 ```
 
 Never use a broad package cleanup command on an Atomic deployment without reviewing the pending deployment.
+
+## Removing the vendored yadm script
+
+yadm is not a host layer, so `rpm-ostree uninstall` does not apply. Remove the
+script and its state directly:
+
+```bash
+rm -f ~/.local/bin/yadm
+rm -rf ~/.local/share/yadm
+```
+
+Only do this to hand the machine back to a state that predates this repository.
+`workstation-bootstrap apply` will otherwise reinstall the pinned script, which
+is intentional.

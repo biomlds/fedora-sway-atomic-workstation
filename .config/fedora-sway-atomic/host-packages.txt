@@ -1,5 +1,8 @@
+# Every entry must name a real Fedora package: these are resolved and layered
+# with rpm-ostree, which aborts on the first unresolvable name. The dotfile
+# manager itself (yadm) is deliberately absent because Fedora ships no yadm
+# package; it is installed as a digest-pinned script. See docs/INSTALL.md.
 # Packages are layered only when absent from the booted Fedora deployment.
-yadm
 sway
 waybar
 rofi-wayland

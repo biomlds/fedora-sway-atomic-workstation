@@ -227,6 +227,69 @@ else
   pass 'font installer verifies against the pinned digest'
 fi
 
+# yadm is not a Fedora package, in Fedora or in Fedora EPEL, so it cannot arrive
+# through rpm-ostree at all. It is installed as one script pinned by commit and
+# digest. versions.env holds the pin the bootstrap enforces; the install guides
+# repeat it because those steps have to work before this repository is cloned.
+yadm_bad=0
+[[ -n "${YADM_VERSION:-}" ]] || { fail 'versions.env does not define YADM_VERSION'; yadm_bad=1; }
+[[ "$YADM_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { fail 'YADM_COMMIT must be a 40-character lowercase commit sha'; yadm_bad=1; }
+[[ "$YADM_SHA256" =~ ^[0-9a-f]{64}$ ]] || { fail 'YADM_SHA256 must be a 64-character lowercase sha256'; yadm_bad=1; }
+(( yadm_bad == 0 )) && pass 'yadm pins are well formed'
+
+yadm_bad=0
+for doc in docs/INSTALL.md docs/RECOVERY.md; do
+  for pin in "YADM_VERSION=$YADM_VERSION" "YADM_COMMIT=$YADM_COMMIT" "YADM_SHA256=$YADM_SHA256"; do
+    grep -qF "$pin" "$doc" || { fail "$doc does not carry the pinned $pin"; yadm_bad=1; }
+  done
+done
+(( yadm_bad == 0 )) && pass 'yadm pins in the install guides match versions.env'
+
+# Regression guard for the defect that made first installation impossible.
+# rpm-ostree rejects a transaction containing a name no repository provides, and
+# the call was unguarded under `set -e`, so the whole apply aborted. The scan is
+# anchored to command position so prose explaining that the command is wrong does
+# not trip it, and CHANGELOG is skipped because it quotes the bad command on
+# purpose.
+yadm_bad=0
+if grep -qx 'yadm' .config/fedora-sway-atomic/host-packages.txt; then
+  fail 'host-packages.txt lists yadm; no Fedora package provides it, so rpm-ostree cannot resolve it'
+  yadm_bad=1
+fi
+if grep -rn --include='*.md' --exclude=CHANGELOG.md \
+  -E '^[[:space:]]*(sudo[[:space:]]+)?rpm-ostree install yadm' .; then
+  fail 'documentation still instructs "rpm-ostree install yadm"'
+  yadm_bad=1
+fi
+(( yadm_bad == 0 )) && pass 'yadm is not treated as a Fedora package'
+
+# rpm-ostree layers the whole list or none of it, so one wrong entry costs the
+# user every host package. This is an offline lint rather than a dependency
+# resolution: it catches names that cannot be packages, not a plausible name that
+# happens not to exist. Probing stays the bootstrap's job.
+yadm_bad=0
+while IFS= read -r package; do
+  if [[ ! "$package" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
+    fail "host-packages.txt entry is not a package name: $package"
+    yadm_bad=1
+  fi
+done < <(grep -vE '^[[:space:]]*(#|$)' .config/fedora-sway-atomic/host-packages.txt)
+(( yadm_bad == 0 )) && pass 'host package manifest holds package names only'
+
+# The digest must gate the executable, and the fetch must address the pinned
+# commit: yadm's develop branch is not byte-identical to its tags and publishes
+# no release assets, so a branch or tag URL would change the tool silently.
+yadm_bad=0
+for symbol in 'install_yadm()' 'yadm_installed()' 'yadm_script_digest()'; do
+  grep -qF "$symbol" .local/share/fedora-sway-atomic/bootstrap-lib.sh \
+    || { fail "bootstrap-lib.sh does not define $symbol"; yadm_bad=1; }
+done
+grep -qE '^[[:space:]]*install_yadm \|\|' .local/share/fedora-sway-atomic/bootstrap-lib.sh \
+  || { fail 'stage_apply does not reconcile yadm'; yadm_bad=1; }
+grep -qE 'YADM_SCRIPT_URL=.*\$\{YADM_COMMIT\}' .local/share/fedora-sway-atomic/bootstrap-lib.sh \
+  || { fail 'the yadm script URL is not pinned to YADM_COMMIT'; yadm_bad=1; }
+(( yadm_bad == 0 )) && pass 'bootstrap verifies and repairs the pinned yadm'
+
 # yadm reads .config/yadm/skip, while a plain checkout of this repository reads
 # .gitignore. Both files describe the same exclusions, so a divergence would
 # let cache data be committed in one workflow but not the other.

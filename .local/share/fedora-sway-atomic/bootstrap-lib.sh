@@ -9,6 +9,8 @@ readonly FONT_FAMILY='JetBrainsMono Nerd Font'
 readonly FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/JetBrainsMonoNerdFont-$NERD_FONT_VERSION"
 readonly FONT_ARCHIVE='JetBrainsMono.zip'
 readonly FONT_BASE_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONT_VERSION}"
+readonly YADM_BIN="$HOME/.local/bin/yadm"
+readonly YADM_SCRIPT_URL="https://raw.githubusercontent.com/yadm-dev/yadm/${YADM_COMMIT}/yadm"
 
 color_enabled=0
 [[ -t 1 ]] && color_enabled=1
@@ -59,6 +61,24 @@ missing_host_packages() {
   while IFS= read -r package; do
     rpm -q "$package" >/dev/null 2>&1 || printf '%s\n' "$package"
   done < <(read_data_lines "$HOST_PACKAGES")
+}
+
+yadm_version() {
+  [[ -x "$YADM_BIN" ]] || return 1
+  "$YADM_BIN" version 2>/dev/null | sed -n 's/^yadm version //p' | head -1
+}
+
+yadm_script_digest() {
+  [[ -f "$YADM_BIN" ]] || return 1
+  command_exists sha256sum || return 1
+  sha256sum "$YADM_BIN" 2>/dev/null | cut -d' ' -f1
+}
+
+# Keyed on the digest rather than 'yadm version': reporting a version needs bash
+# and git, and git is deliberately not a host package on this image.
+yadm_installed() {
+  [[ "$YADM_SHA256" =~ ^[0-9a-f]{64}$ ]] || return 1
+  [[ "$(yadm_script_digest || printf none)" == "$YADM_SHA256" ]]
 }
 
 font_installed() {
@@ -115,6 +135,19 @@ plan_flatpaks() {
   fi
 }
 
+plan_yadm() {
+  info 'Dotfile manager'
+  if yadm_installed; then
+    ok "yadm $YADM_VERSION is installed at $YADM_BIN"
+  elif [[ -f "$YADM_BIN" ]]; then
+    printf '  would replace %s: sha256 %s, pinned %s\n' \
+      "$YADM_BIN" "$(yadm_script_digest || printf unknown)" "$YADM_SHA256"
+  else
+    printf '  would install yadm %s from %s (sha256 %s)\n' \
+      "$YADM_VERSION" "$YADM_SCRIPT_URL" "${YADM_SHA256:-unpinned}"
+  fi
+}
+
 plan_font() {
   info 'Desktop font'
   if font_installed; then
@@ -135,6 +168,7 @@ stage_plan() {
   local with_optional="$1"
   info "Fedora Sway Atomic workstation $PROJECT_VERSION plan"
   is_atomic_fedora || warn 'current environment is not a booted Fedora Atomic deployment'
+  plan_yadm
   plan_host
   plan_flatpaks "$with_optional"
   plan_font
@@ -155,24 +189,62 @@ ensure_flathub() {
   fi
 }
 
+host_package_available() {
+  local package="$1"
+  [[ -n "$package" ]] || return 1
+  # Fedora Atomic resolves host layers through rpm-ostree, which rejects the
+  # whole transaction on the first name it cannot find. Probe first so one bad
+  # entry is reported by name instead of aborting the entire apply.
+  if command_exists rpm-ostree; then
+    rpm-ostree install --dry-run --idempotent "$package" >/dev/null 2>&1 && return 0
+    return 1
+  fi
+  return 0
+}
+
 apply_host_packages() {
   if [[ "${FSA_ALLOW_NON_ATOMIC:-0}" == 1 ]] && ! is_atomic_fedora; then
     warn 'skipping host package changes on non-Atomic host'
     return
   fi
-  local -a missing=()
+  local -a missing=() resolvable=() unresolvable=()
   mapfile -t missing < <(missing_host_packages)
   if ((${#missing[@]} == 0)); then
     ok 'host package deployment is already converged'
     return
   fi
-  info "layering missing host packages: ${missing[*]}"
-  sudo rpm-ostree install --idempotent "${missing[@]}"
+  local package
+  for package in "${missing[@]}"; do
+    if host_package_available "$package"; then
+      resolvable+=("$package")
+    else
+      unresolvable+=("$package")
+    fi
+  done
+  if ((${#unresolvable[@]} > 0)); then
+    error "no Fedora package provides: ${unresolvable[*]}"
+    error 'fix .config/fedora-sway-atomic/host-packages.txt; see docs/HARDENING.md on host footprint'
+    if ((${#resolvable[@]} == 0)); then
+      return 1
+    fi
+    warn "layering the ${#resolvable[@]} remaining package(s) anyway"
+  fi
+  if ((${#resolvable[@]} == 0)); then
+    return 0
+  fi
+  info "layering missing host packages: ${resolvable[*]}"
+  if ! sudo rpm-ostree install --idempotent "${resolvable[@]}"; then
+    error 'rpm-ostree could not resolve the remaining host packages'
+    return 1
+  fi
   touch "${XDG_STATE_HOME:-$HOME/.local/state}/fedora-sway-atomic-reboot-required" 2>/dev/null || {
     mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}"
     touch "${XDG_STATE_HOME:-$HOME/.local/state}/fedora-sway-atomic-reboot-required"
   }
   warn 'a new rpm-ostree deployment was created; reboot after apply'
+  if ((${#unresolvable[@]} > 0)); then
+    return 1
+  fi
 }
 
 install_flatpak_manifest() {
@@ -186,6 +258,41 @@ install_flatpak_manifest() {
       sudo flatpak install --system --noninteractive --or-update flathub "$id"
     fi
   done < <(read_data_lines "$file")
+}
+
+install_yadm() {
+  if yadm_installed; then
+    ok "yadm $YADM_VERSION is already installed"
+    return
+  fi
+  command_exists curl || die 'curl is required to install yadm'
+  command_exists sha256sum || die 'sha256sum is required to install yadm'
+  [[ "$YADM_SHA256" =~ ^[0-9a-f]{64}$ ]] || die 'YADM_SHA256 is unset or malformed in versions.env'
+  [[ "$YADM_COMMIT" =~ ^[0-9a-f]{40}$ ]] || die 'YADM_COMMIT is unset or malformed in versions.env'
+  local work
+  work=$(mktemp -d)
+  # RETURN traps do not run when die exits, so clean up before every exit path.
+  trap 'rm -rf "${work:-}"' RETURN
+  if [[ -x "$YADM_BIN" ]]; then
+    info "replacing unpinned yadm at $YADM_BIN (sha256 $(yadm_script_digest || printf unknown))"
+  else
+    info "downloading yadm $YADM_VERSION"
+  fi
+  if ! curl --fail --location --silent --show-error --retry 3 "$YADM_SCRIPT_URL" -o "$work/yadm"; then
+    rm -rf "$work"
+    die "cannot download yadm from $YADM_SCRIPT_URL"
+  fi
+  if ! printf '%s  %s\n' "$YADM_SHA256" "$work/yadm" | sha256sum --check --status; then
+    rm -rf "$work"
+    die 'yadm script digest does not match YADM_SHA256; refusing to install'
+  fi
+  mkdir -p "${YADM_BIN%/*}"
+  install -m 0755 "$work/yadm" "$YADM_BIN"
+  if ! yadm_installed; then
+    rm -rf "$work"
+    die "yadm $YADM_VERSION did not run correctly from $YADM_BIN"
+  fi
+  ok "installed yadm $YADM_VERSION at $YADM_BIN"
 }
 
 install_font() {
@@ -251,11 +358,12 @@ build_toolbox() {
 }
 
 stage_apply() {
-  local with_optional="$1"
+  local with_optional="$1" failures=0
   assert_supported_host
   command_exists sudo || die 'sudo is required by apply for rpm-ostree layering and system Flatpak installation'
   info "converging Fedora Sway Atomic workstation $PROJECT_VERSION"
-  apply_host_packages
+  install_yadm || failures=1
+  apply_host_packages || failures=1
   if command_exists flatpak; then
     ensure_flathub
     install_flatpak_manifest "$REQUIRED_FLATPAKS"
@@ -278,6 +386,7 @@ stage_apply() {
   if [[ -e "$marker" ]]; then
     warn "reboot required; remove $marker after booting the new deployment"
   fi
+  ((failures == 0))
 }
 
 check_command() {
@@ -308,6 +417,12 @@ stage_check() {
   local with_optional="$1" failures=0
   info 'running local workstation checks'
   is_atomic_fedora || { error 'not booted into a Fedora Atomic deployment'; failures=1; }
+  if yadm_installed; then
+    ok "yadm $YADM_VERSION present"
+  else
+    error "yadm $YADM_VERSION missing or drifted (found $(yadm_version || printf 'not installed')); run 'workstation-bootstrap apply'"
+    failures=1
+  fi
   for command in sway waybar rofi dunst foot kanshi swaylock swayidle flatpak podman toolbox; do
     check_command "$command" || failures=1
   done

@@ -6,6 +6,7 @@
 - Flatpak permissions limit GUI application access but must still be reviewed per application. System-wide installation shares state across accounts and does not add isolation beyond what the sandbox already provides.
 - Toolbx is trusted developer convenience. It shares the user's home, devices, sockets, network, and credentials and is not a sandbox.
 - yadm content is public-repository-safe by design; no secret material is tracked.
+- yadm itself is not a Fedora package. Because it runs as the invoking user against the home directory, it is installed as a single script pinned by commit and SHA-256, verified on every `apply`, and carries no privilege beyond the user's own files. It is not covered by `rpm-ostree rollback`.
 - KeePassXC and offline recovery media are the secret trust anchors.
 - Vorta invokes Borg; repository encryption is only as strong as its passphrase/key handling and recovery practice.
 

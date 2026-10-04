@@ -12,7 +12,7 @@ Fedora Sway Atomic is manually installed with LUKS encryption. Podman, Toolbx, r
 
 ### Layer 1: yadm configuration
 
-yadm owns the home-relative files in this repository. Fedora's Sway profile remains the base; ordered snippets under `~/.config/sway/config.d` override it at user precedence. The repository contains no secrets or machine output identifiers.
+yadm owns the home-relative files in this repository. Fedora's Sway profile remains the base; ordered snippets under `~/.config/sway/config.d` override it at user precedence. The repository contains no secrets or machine output identifiers. yadm itself is upstream `yadm-dev/yadm`, pinned by commit and SHA-256 in `.config/fedora-sway-atomic/versions.env`, installed outside the ostree deployment.
 
 ### Layer 2: desktop session
 
@@ -101,6 +101,8 @@ KeePassXC is the secrets source of truth. SSH keys, tokens, Wi-Fi credentials, r
 ## Host mutation policy
 
 The host package manifest includes only compositor/session integration and bootstrap prerequisites. CLI development tools belong in Toolbx. GUI applications belong in Flatpak. A host-layer addition requires an operational reason and rollback instructions.
+
+Two exceptions are not packages at all. yadm is the dotfile manager that applies this repository, so it cannot live inside the repository it clones and cannot be a host layer, because Fedora ships no `yadm` package. It is installed as a single digest-pinned script in `~/.local/bin`. The Nerd Font is likewise fetched as a verified archive rather than a package. Both are outside package management: they are covered by [Hardening](HARDENING.md) instead, and `apply` reconciles them on every run.
 
 ## Service policy
 

@@ -39,6 +39,31 @@ The split is deliberate:
 Before adding a host package, confirm it cannot be delivered as a Flatpak or a
 Toolbx image. Record the operational reason and a rollback command.
 
+Two components are installed outside package management and are therefore never
+covered by `rpm-ostree rollback`:
+
+- **yadm**, as `~/.local/bin/yadm`, a single POSIX shell script from
+  `yadm-dev/yadm` pinned by commit and SHA-256 in
+  `.config/fedora-sway-atomic/versions.env`. Fedora ships no `yadm` package, so
+  the alternative was a third-party repository in the ostree deployment. The
+  script runs as the invoking user and holds no privileges beyond that user's
+  own home directory.
+- **JetBrains Mono Nerd Font**, as loose files under
+  `~/.local/share/fonts/`, verified against `NERD_FONT_SHA256`.
+
+Both are treated as *content*, not packages: `apply` re-verifies the digest on
+every run and reinstalls the pinned copy if it is missing or has drifted, so
+these are self-healing in a way layered packages are not. To confirm the state by
+hand:
+
+```bash
+sha256sum ~/.local/bin/yadm
+grep YADM_SHA256 .config/fedora-sway-atomic/versions.env
+```
+
+If the two differ, do not run `yadm`; reinstall from
+[installation step 4](INSTALL.md#4-install-yadm).
+
 ## Application sandboxing
 
 Flatpak permissions are the main per-application risk. Review them rather than

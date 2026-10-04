@@ -2,6 +2,31 @@
 
 All notable changes are documented here. The project follows Semantic Versioning.
 
+## Unreleased
+
+### Fixed
+
+- First installation could not complete. `host-packages.txt` listed `yadm` as a
+  host package, but Fedora ships no `yadm` package in Fedora or Fedora EPEL, so
+  `rpm-ostree install yadm` failed and `rpm-ostree` rejected the whole host-layer
+  transaction. Because `apply` ran it unguarded under `set -e`, one bad name
+  aborted the run before Flatpaks, the font, and Toolbx were reached. `yadm` is
+  removed from the manifest, and `apply` now probes each name first, reports
+  unresolvable packages individually, layers the remainder, and exits non-zero.
+- yadm is installed as a single script pinned by commit and SHA-256 in
+  `.config/fedora-sway-atomic/versions.env` instead of from a package. `apply`
+  verifies the installed script against that digest and reinstalls it when it is
+  missing or has drifted; `check` reports a mismatched or absent yadm.
+- Documentation no longer instructs `sudo rpm-ostree install yadm`.
+
+### Added
+
+- Pre-clone yadm installation steps in `docs/INSTALL.md` and `docs/RECOVERY.md`,
+  including the digest check and the reason Fedora cannot supply yadm.
+- Repository checks that reject `yadm` in the host package manifest, a stale
+  `rpm-ostree install yadm` instruction, malformed yadm pins, and host manifest
+  entries that are not plausible Fedora package names.
+
 ## 1.1.0 - 2026-10-03
 
 Fix a set of Sway session defects where this repository and Fedora's own Sway
