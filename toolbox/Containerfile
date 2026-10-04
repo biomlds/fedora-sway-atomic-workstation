@@ -15,18 +15,40 @@ USER root
 # a repository. Inside a module the check does not apply, so this builds, and it
 # is the same pin-by-commit shape used for zinit and zsh-syntax-highlighting
 # below. CGO stays on because deja reads sqlite through mattn/go-sqlite3.
+#
+# The invariant is that no step here changes directory. An earlier version did
+# `cd` into the clone and then removed it, which left the shell sitting in an
+# unlinked directory and made the lazygit install that followed fail to resolve
+# its module, while reporting nothing but a bare exit code. Anything that
+# addresses the clone must use `git -C` or `go -C` instead.
+#
+# Separate steps rather than one && chain, because a chain reports only a
+# single exit code and never says which command failed. Each step below has a
+# single purpose so that a build failure names the operation responsible.
+
+# The toolchain is its own layer so a change to deja does not reinstall Go.
 RUN dnf -y install --setopt=install_weak_deps=False golang git ca-certificates gcc glibc-devel \
-    && mkdir -p /out \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+# Fetch the pinned commit and drop the git metadata before building.
+RUN mkdir -p /out /src \
     && git init -q /src/deja \
-    && cd /src/deja \
-    && git remote add origin https://github.com/Giammarco-Ferranti/deja.git \
-    && git fetch --depth 1 --quiet origin "${DEJA_COMMIT}" \
-    && git checkout -q FETCH_HEAD \
-    && rm -rf /src/deja/.git \
-    && CGO_ENABLED=1 go build -trimpath -ldflags='-s -w' -o /out/deja ./cmd/deja \
-    && rm -rf /src/deja \
-    && GOBIN=/out CGO_ENABLED=0 go install -trimpath -ldflags='-s -w' github.com/jesseduffield/lazygit@${LAZYGIT_VERSION} \
-    && /out/deja --version \
+    && git -C /src/deja remote add origin https://github.com/Giammarco-Ferranti/deja.git \
+    && git -C /src/deja fetch --depth 1 --quiet origin "${DEJA_COMMIT}" \
+    && git -C /src/deja checkout -q FETCH_HEAD \
+    && rm -rf /src/deja/.git
+
+# `go -C` addresses the clone in place rather than changing directory.
+RUN CGO_ENABLED=1 go -C /src/deja build -trimpath -ldflags='-s -w' -o /out/deja ./cmd/deja
+
+RUN rm -rf /src/deja
+
+# A versioned go install must run outside a module, which the image root is.
+RUN GOBIN=/out CGO_ENABLED=0 go install -trimpath -ldflags='-s -w' github.com/jesseduffield/lazygit@${LAZYGIT_VERSION}
+
+# Fail the build here rather than in a later stage if either binary is unusable.
+RUN /out/deja --version \
     && /out/lazygit --version
 
 FROM registry.fedoraproject.org/fedora:${FEDORA_RELEASE} AS rust-builder

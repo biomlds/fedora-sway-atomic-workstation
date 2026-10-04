@@ -15,13 +15,21 @@ All notable changes are documented here. The project follows Semantic Versioning
   dispatch, with a GHA build cache so a no-op rebuild reuses the cargo stages.
   Static validation and the secret scan still run on every push and are what
   catch pin drift, in seconds rather than minutes.
+- The `go-builder` stage changed directory into the pinned `deja` clone and then
+  removed that same clone, so the `go install` for lazygit that followed ran
+  with an unlinked working directory and could not resolve its module. The stage
+  reported only a bare exit code, which is why it went undiagnosed. No step in
+  that stage changes directory now; the clone is addressed in place with `git -C`
+  and `go -C`. The stage is also split into single-purpose steps, so a failure
+  names the operation that broke instead of returning an opaque exit code.
 - The Toolbx image did not build. `deja` was installed with
   `go install github.com/Giammarco-Ferranti/deja/cmd/deja@v0.4.2`, but its
   `go.mod` declares `module github.com/giammarcoferranti/deja`, and Go requires
   those two paths to match for a versioned install. No release can fix it:
   every tag from v0.2.2 to v0.4.2 declares the same path, and the declared path
   is not a repository at all. It is now built from a clone pinned to
-  `DEJA_COMMIT`, which is the `v0.4.2` tag object; inside a module the
+  `DEJA_COMMIT`, which is the commit the lightweight `v0.4.2` tag points to;
+  inside a module the
   declared-versus-requested check does not apply. This reuses the shape already
   used for zinit and zsh-syntax-highlighting, and validation rejects a return to
   the versioned `go install`. `CGO_ENABLED=1` is retained because `deja` reads
