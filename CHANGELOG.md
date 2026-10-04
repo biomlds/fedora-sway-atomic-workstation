@@ -6,6 +6,13 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Fixed
 
+- eza was not themed at all, despite a correct Catppuccin Mocha file being
+  present. In `src/options/theme.rs`, `ThemeConfig::deduce` probes `theme.yml`
+  first and returns `ThemeConfig::default()` without reading it; only the
+  `theme.yaml` branch calls `from_path`. The file is now `theme.yaml`, byte for
+  byte the official sapphire port, and validation rejects `theme.yml` so the
+  dead filename cannot return. Both names are probed with `.yml` first, so a
+  leftover `theme.yml` would have shadowed the real theme.
 - The session lock did nothing. `Super+L` was bound both to `exec swaylock -f`
   and to `focus right`; sway resolves a repeated key and flag pair to the last
   one, so the later focus binding silently replaced the lock. The lock moved to

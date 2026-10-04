@@ -1,3 +1,21 @@
+# Catppuccin Mocha with the Sapphire accent, for eza.
+#
+# Upstream : https://github.com/catppuccin/eza
+#            themes/mocha/catppuccin-mocha-sapphire.yml
+# File     : ~/.config/eza/theme.yaml
+#
+# The contents below are byte-identical to upstream; no colour was changed.
+#
+# The .yaml extension is not cosmetic. eza probes two names in
+# src/options/theme.rs: it finds theme.yml, returns ThemeConfig::default()
+# without reading it, and only calls from_path for theme.yaml. A theme.yml
+# therefore renders as eza's stock colours with no error anywhere, and both
+# names are probed with .yml first, so the old file must not be left behind.
+#
+# Symlinks, env vars and source files keep upstream's blue #89b4fa. Blue is a
+# palette member in its own right and is not the accent; substituting sapphire
+# there would be wrong.
+
 colourful: true
 
 filekinds:

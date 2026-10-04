@@ -49,7 +49,7 @@ owns the values.
 | Prompt | Starship | `starship.toml` | local |
 | Editor | Neovim | `init.lua` + `lua/catppuccin/` | **official port**, vendored |
 | File manager | Yazi | `theme.toml` | **official port** |
-| File listing | eza | `~/.config/eza/theme.yml` | **official port** |
+| File listing | eza | `~/.config/eza/theme.yaml` | **official port** |
 | Pager | bat | `Catppuccin Mocha.tmTheme` | **official port** |
 | Git | diff, status, branches | `.gitconfig` | local |
 | Git TUI | LazyGit | `config.yml` | **official port** |
@@ -66,11 +66,21 @@ repository strictly palette-only; the rest are verbatim.
 | --- | --- | --- |
 | `lua/catppuccin/` | [catppuccin/nvim](https://github.com/catppuccin/nvim) @ `edefef77` | `groups/integrations/` dropped; see below |
 | `theme.toml` (Yazi) | [catppuccin/yazi](https://github.com/catppuccin/yazi) | `syntect_theme` removed; `progress_label` white → `text` |
-| `theme.yml` (eza) | [catppuccin/eza](https://github.com/catppuccin/eza) | none |
+| `theme.yaml` (eza) | [catppuccin/eza](https://github.com/catppuccin/eza) | none; renamed, see below |
 | `config.yml` (LazyGit) | [catppuccin/lazygit](https://github.com/catppuccin/lazygit) | none |
 | `colors/…sapphire.conf` (qt5ct) | [catppuccin/qt5ct](https://github.com/catppuccin/qt5ct) | four values mapped onto the palette |
 
-Three of these deserve spelling out.
+Four of these deserve spelling out.
+
+**eza only parses one of its two theme filenames.** In
+`src/options/theme.rs`, `ThemeConfig::deduce` probes `theme.yml` first and, if
+it finds one, returns `ThemeConfig::default()` *without reading it*. Only the
+`theme.yaml` branch calls `from_path` and actually loads the file. A perfectly
+maintained `theme.yml` therefore renders as eza's stock colours and produces no
+error anywhere, which is why the file here is `theme.yaml` even though the port
+ships `.yml` and eza's own changelog treats `theme.yml` as canonical. Both names
+are probed with `.yml` first, so a leftover `theme.yml` would shadow the real
+theme rather than be ignored. `scripts/validate-repo.sh` rejects that name.
 
 **Neovim is vendored, not installed.** The Toolbx image is built offline, so a
 plugin manager fetching a colorscheme at build time would make the theme

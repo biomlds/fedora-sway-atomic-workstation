@@ -30,7 +30,7 @@ required_files=(
   docs/INSTALL.md docs/HARDENING.md docs/TESTED-HARDWARE.md docs/THEMING.md
   .gitconfig .gitignore .config/yadm/skip .config/lazygit/config.yml
   .config/kdeglobals
-  .config/eza/theme.yml .config/qt5ct/qt5ct.conf
+  .config/eza/theme.yaml .config/qt5ct/qt5ct.conf
   .config/qt5ct/colors/catppuccin-mocha-sapphire.conf
   .config/nvim/init.lua .config/nvim/colors/catppuccin-mocha.lua
   .config/nvim/lua/catppuccin/init.lua .config/nvim/lua/catppuccin/VENDORED.md
@@ -346,7 +346,7 @@ THEME_FILES = [
     '.config/lazygit/config.yml',
     '.config/kdeglobals',
     '.gitconfig',
-    '.config/eza/theme.yml',
+    '.config/eza/theme.yaml',
     '.config/qt5ct/qt5ct.conf',
     '.config/qt5ct/colors/catppuccin-mocha-sapphire.conf',
     '.var/app/com.visualstudio.code/config/Code/User/settings.json',
@@ -456,6 +456,20 @@ if problems:
     sys.exit(1)
 print('[PASS] Catppuccin Mocha palette is enforced')
 PY
+
+# eza only ever parses one of its two candidate filenames. In
+# src/options/theme.rs, ThemeConfig::deduce probes theme.yml first but returns
+# ThemeConfig::default() when it finds one, discarding the contents; only the
+# theme.yaml branch calls from_path and actually loads the file. So a correctly
+# maintained theme.yml renders as eza's stock colours and looks like a working
+# theme that is merely boring, which is why the filename is pinned here. Both
+# names are probed, .yml first, so leaving the old file behind would shadow the
+# new one rather than being harmless.
+[[ -e .config/eza/theme.yaml ]] || fail 'eza theme must live at .config/eza/theme.yaml'
+if [[ -e .config/eza/theme.yml ]]; then
+  fail '.config/eza/theme.yml exists, but eza ignores that name and would fall back to its default theme'
+fi
+(( failures == 0 )) && pass 'eza theme uses the filename eza actually parses'
 
 # The Neovim colorscheme is the official Catppuccin port, vendored instead of
 # installed through a plugin manager so the palette cannot drift and the offline
