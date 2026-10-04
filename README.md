@@ -96,7 +96,7 @@ The Toolbx name is versioned. Rebuilding a newer version never silently destroys
 | `Super+Shift+Q` | Close focused window |
 | `Super+Shift+C` | Reload Sway |
 | `Super+Shift+E` | Power menu |
-| `Super+L` | Lock session |
+| `Super+Escape` | Lock session |
 | `Print` | Copy a region screenshot to the clipboard |
 | `Super+Print` | Save a region screenshot in `~/Pictures/Screenshots` |
 | `Alt+Print` / `Ctrl+Print` | Fedora `grimshot` window / area capture |

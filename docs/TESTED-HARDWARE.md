@@ -17,6 +17,10 @@ applied deployment:
 - Exactly one Waybar instance is running.
 - Suspend and resume both work, including wake to a locked screen.
 - Volume, mute, and brightness keys change state once per press.
+- `Super+Escape` locks the screen. A binding that resolves to a dead key looks
+  identical to a working one from the config file, so press it rather than
+  reading the snippet.
+- `Super+H`, `Super+J`, `Super+K`, and `Super+L` each move focus to one edge.
 - Displays power off after the idle timeout and wake on input.
 - The GPU driver is the expected one with no fallback to software rendering.
 - Audio output and input both work over PipeWire.

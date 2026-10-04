@@ -6,6 +6,11 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Fixed
 
+- The session lock did nothing. `Super+L` was bound both to `exec swaylock -f`
+  and to `focus right`; sway resolves a repeated key and flag pair to the last
+  one, so the later focus binding silently replaced the lock. The lock moved to
+  `Super+Escape`, which upstream only mentions in a comment in `90-swayidle.conf`
+  and which therefore collides with nothing.
 - Volume, mute, and brightness keys lost their on-screen display. The repository
   rebound all six keys to bare `brightnessctl` and `wpctl` calls with a hardcoded
   5% step, replacing Fedora's `volume-helper` and brightness snippets. Those
