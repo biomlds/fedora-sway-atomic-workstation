@@ -212,7 +212,7 @@ set -a
 # shellcheck source=/dev/null
 . .config/fedora-sway-atomic/versions.env
 set +a
-for key in FEDORA_RELEASE DEJA_VERSION LAZYGIT_VERSION EZA_VERSION STARSHIP_VERSION YAZI_VERSION \
+for key in FEDORA_RELEASE DEJA_VERSION DEJA_COMMIT LAZYGIT_VERSION EZA_VERSION STARSHIP_VERSION YAZI_VERSION \
   ZINIT_VERSION ZINIT_COMMIT ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_SYNTAX_HIGHLIGHTING_COMMIT MISE_VERSION; do
   value="${!key:-}"
   [[ -n "$value" ]] || fail "versions.env does not define $key"
@@ -220,6 +220,17 @@ for key in FEDORA_RELEASE DEJA_VERSION LAZYGIT_VERSION EZA_VERSION STARSHIP_VERS
     || fail "Containerfile ARG $key does not match versions.env ($value)"
 done
 (( failures == 0 )) && pass 'Toolbx pins are consistent with versions.env'
+
+# deja's go.mod declares a module path that does not match its repository path,
+# so `go install ...@version` can never resolve it. No release fixes this, so the
+# Containerfile has to build it from a clone. Without this gate a well-meaning
+# cleanup back to the shorter go-install form would only fail inside the image
+# build, where the error is far from the cause.
+if grep -qE 'go install [^|]*deja/cmd/deja@' toolbox/Containerfile; then
+  fail 'deja must be built from a pinned clone, not go install pkg@version: its go.mod module path does not match its repository path'
+else
+  pass 'deja is built from a clone rather than a versioned go install'
+fi
 
 [[ "$NERD_FONT_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'NERD_FONT_SHA256 must be a 64-character lowercase sha256'
 if grep -q 'SHA256SUMS' .local/share/fedora-sway-atomic/bootstrap-lib.sh; then

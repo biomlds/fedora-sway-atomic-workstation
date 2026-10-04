@@ -3,11 +3,28 @@ ARG FEDORA_RELEASE=44
 
 FROM registry.fedoraproject.org/fedora:${FEDORA_RELEASE} AS go-builder
 ARG DEJA_VERSION=v0.4.2
+ARG DEJA_COMMIT=97156840defebb476be0bbc97bbcca3b75934c66
 ARG LAZYGIT_VERSION=v0.65.1
 USER root
+
+# deja is built from a clone rather than `go install pkg@version`. Its go.mod
+# declares `module github.com/giammarcoferranti/deja` while the repository lives
+# at github.com/Giammarco-Ferranti/deja, and Go requires those to match for a
+# versioned install, so that form can never resolve. No release fixes it: every
+# tag from v0.2.2 to v0.4.2 declares the same path, and the declared path is not
+# a repository. Inside a module the check does not apply, so this builds, and it
+# is the same pin-by-commit shape used for zinit and zsh-syntax-highlighting
+# below. CGO stays on because deja reads sqlite through mattn/go-sqlite3.
 RUN dnf -y install --setopt=install_weak_deps=False golang git ca-certificates gcc glibc-devel \
     && mkdir -p /out \
-    && GOBIN=/out CGO_ENABLED=1 go install -trimpath -ldflags='-s -w' github.com/Giammarco-Ferranti/deja/cmd/deja@${DEJA_VERSION} \
+    && git init -q /src/deja \
+    && cd /src/deja \
+    && git remote add origin https://github.com/Giammarco-Ferranti/deja.git \
+    && git fetch --depth 1 --quiet origin "${DEJA_COMMIT}" \
+    && git checkout -q FETCH_HEAD \
+    && rm -rf /src/deja/.git \
+    && CGO_ENABLED=1 go build -trimpath -ldflags='-s -w' -o /out/deja ./cmd/deja \
+    && rm -rf /src/deja \
     && GOBIN=/out CGO_ENABLED=0 go install -trimpath -ldflags='-s -w' github.com/jesseduffield/lazygit@${LAZYGIT_VERSION} \
     && /out/deja --version \
     && /out/lazygit --version

@@ -6,6 +6,18 @@ All notable changes are documented here. The project follows Semantic Versioning
 
 ### Fixed
 
+- The Toolbx image did not build. `deja` was installed with
+  `go install github.com/Giammarco-Ferranti/deja/cmd/deja@v0.4.2`, but its
+  `go.mod` declares `module github.com/giammarcoferranti/deja`, and Go requires
+  those two paths to match for a versioned install. No release can fix it:
+  every tag from v0.2.2 to v0.4.2 declares the same path, and the declared path
+  is not a repository at all. It is now built from a clone pinned to
+  `DEJA_COMMIT`, which is the `v0.4.2` tag object; inside a module the
+  declared-versus-requested check does not apply. This reuses the shape already
+  used for zinit and zsh-syntax-highlighting, and validation rejects a return to
+  the versioned `go install`. `CGO_ENABLED=1` is retained because `deja` reads
+  sqlite through `mattn/go-sqlite3`. lazygit is unaffected and still uses
+  `go install`.
 - eza was not themed at all, despite a correct Catppuccin Mocha file being
   present. In `src/options/theme.rs`, `ThemeConfig::deduce` probes `theme.yml`
   first and returns `ThemeConfig::default()` without reading it; only the

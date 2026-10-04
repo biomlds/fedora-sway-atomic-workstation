@@ -35,6 +35,7 @@ jobs:
             echo 'args<<FSA_PINS_EOF'
             echo "FEDORA_RELEASE=${FEDORA_RELEASE}"
             echo "DEJA_VERSION=${DEJA_VERSION}"
+            echo "DEJA_COMMIT=${DEJA_COMMIT}"
             echo "LAZYGIT_VERSION=${LAZYGIT_VERSION}"
             echo "EZA_VERSION=${EZA_VERSION}"
             echo "STARSHIP_VERSION=${STARSHIP_VERSION}"
