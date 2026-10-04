@@ -1,3 +1,11 @@
+/* Catppuccin Mocha with the Sapphire accent, for Rofi.
+ *
+ * Upstream : https://github.com/catppuccin/rofi  themes/catppuccin-mocha.rasi
+ *
+ * Upstream publishes one blue-accent file, so this is local. It holds launcher
+ * behaviour and layout only; every colour is set by the theme file next to it,
+ * which is a fuller local fork of the upstream theme rather than a copy.
+ */
 configuration {
   modi: "drun,run,window";
   show-icons: true;

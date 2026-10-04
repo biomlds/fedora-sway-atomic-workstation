@@ -1,3 +1,13 @@
+# Catppuccin Mocha with the Sapphire accent, for dunst.
+#
+# Upstream : https://github.com/catppuccin/dunst  themes/mocha.conf
+#
+# Upstream publishes one blue-accent file and no sapphire variant, so this is a
+# local file on the official palette rather than a copy. Two differences from
+# upstream are deliberate. Normal notifications use subtext0 #a6adc8 rather than
+# text #cdd6f4, so an idle desktop is not full of full-brightness text, and the
+# urgency classes (critical, warning and the two normal overrides) are set
+# explicitly because upstream is only a colour block and carries no layout.
 [global]
     monitor = 0
     follow = mouse

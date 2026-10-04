@@ -1,3 +1,12 @@
+# Catppuccin Mocha with the Sapphire accent, for swaylock.
+#
+# Upstream : https://github.com/catppuccin/swaylock  themes/mocha.conf
+#
+# Upstream publishes one blue-accent file, so this is local, and it is a
+# redesign rather than a recolour: upstream keys its colours off a text-only
+# layout while this uses the indicator ring. Backspace highlights in red rather
+# than upstream's rosewater, which would not read as destructive, and text on a
+# filled indicator uses crust so it stays legible against every accent state.
 daemonize
 show-failed-attempts
 indicator

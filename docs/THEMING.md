@@ -46,6 +46,7 @@ owns the values.
 | Terminal | Foot | `foot.ini` | local, on the official palette |
 | Terminal UI | tmux | `tmux.conf` | local |
 | Shell | Zsh, FZF | `.zshrc` | local |
+| Shell highlighting | zsh-syntax-highlighting | `themes/catppuccin-mocha.zsh` | **official port**, vendored |
 | Prompt | Starship | `starship.toml` | local |
 | Editor | Neovim | `init.lua` + `lua/catppuccin/` | **official port**, vendored |
 | File manager | Yazi | `theme.toml` | **official port** |
@@ -59,7 +60,7 @@ owns the values.
 
 ### Official ports and the edits made to them
 
-Five files are taken from upstream. Three needed a change to keep the
+Seven files are taken from upstream. Five needed a change to keep the
 repository strictly palette-only; the rest are verbatim.
 
 | File | Upstream | Change |
@@ -67,10 +68,50 @@ repository strictly palette-only; the rest are verbatim.
 | `lua/catppuccin/` | [catppuccin/nvim](https://github.com/catppuccin/nvim) @ `edefef77` | `groups/integrations/` dropped; see below |
 | `theme.toml` (Yazi) | [catppuccin/yazi](https://github.com/catppuccin/yazi) | `syntect_theme` removed; `progress_label` white → `text` |
 | `theme.yaml` (eza) | [catppuccin/eza](https://github.com/catppuccin/eza) | none; renamed, see below |
-| `config.yml` (LazyGit) | [catppuccin/lazygit](https://github.com/catppuccin/lazygit) | none |
+| `Catppuccin Mocha.tmTheme` (bat) | [catppuccin/bat](https://github.com/catppuccin/bat) @ `6810349b` | accent substituted; `findHighlight` mapped |
+| `config.yml` (LazyGit) | [catppuccin/lazygit](https://github.com/catppuccin/lazygit) | restructured into `config.yml` form, see below |
 | `colors/…sapphire.conf` (qt5ct) | [catppuccin/qt5ct](https://github.com/catppuccin/qt5ct) | four values mapped onto the palette |
+| `themes/catppuccin-mocha.zsh` | [catppuccin/zsh-syntax-highlighting](https://github.com/catppuccin/zsh-syntax-highlighting) @ `7926c3d` | none |
 
-Four of these deserve spelling out.
+Six of these deserve spelling out.
+
+**bat has no Sapphire port either, so its accent was substituted by hand.**
+Upstream publishes one blue-accent theme, and that is structural rather than an
+oversight: `src/convert.ts` takes its token colours from a VS Code theme that
+already has hex baked in, and never substitutes an accent into them, so no
+sapphire variant can be generated and none exists. Every `#89b4fa` in the file
+is therefore an accent slot, and all 18 of them become `#74c7ec` here. That
+leaves no blue in any value, matching the local tmux, Waybar, and Rofi files.
+
+Two further colour edits, and one upstream inconsistency repaired in passing.
+Upstream's `findHighlight` is `#3e5767`, which is not a Mocha colour; it becomes
+`surface2`. Nearest by RGB distance would be `surface1`, at 21.8 against 27.8,
+but a find-match highlight has to read as a highlight against `base` rather than
+as a faintly lighter background, and `surface2` sits 58 points above `base`
+where `surface1` sits 39 — the same reasoning as the qt5ct mappings, where
+legibility outranks proximity. Upstream's `selection` is `#9399b240`, which is
+`overlay2` at 40% alpha, and is left alone. And the heading gradient upstream is
+1 red, 2 peach, 3 yellow, 4 green, 5 sapphire, 6 lavender, so heading 5 was
+already sapphire in the file named for blue; after substitution the accent is
+uniform.
+
+**LazyGit's port is a fragment, not a configuration file.** Upstream ships a
+29-line `themes/mocha/sapphire.yml` holding a `theme` block and a top-level
+`authorColors` key, which is what you merge into an existing `config.yml`. It is
+not valid as a `config.yml` on its own, because `theme` is not a top-level key
+and `authorColors` belongs under `gui`. The colours here are upstream's
+unchanged; the structure is this repository's, wrapping them as `gui.theme` with
+`authorColors` nested under `gui`. The earlier claim that this file was upstream
+verbatim was wrong in that sense.
+
+**zsh-syntax-highlighting has to be loaded before the theme, not after.**
+Upstream's port sets `ZSH_HIGHLIGHT_HIGHLIGHTERS` and then assigns
+`ZSH_HIGHLIGHT_STYLES`, and the plugin builds its highlighters when it is
+sourced — so style assignments made after that point are silently ignored. The
+order in `.config/zsh/.zshrc` is therefore theme first, plugin second, which
+reads as backwards and is asserted by `scripts/validate-repo.sh` comparing the
+two line numbers. The port needs no accent substitution: it uses eight palette
+members and neither blue nor sapphire.
 
 **eza only parses one of its two theme filenames.** In
 `src/options/theme.rs`, `ThemeConfig::deduce` probes `theme.yml` first and, if
@@ -106,7 +147,21 @@ local, on the official palette, and adopt upstream values selectively where they
 are genuinely better: `foot.ini` now carries upstream's `cursor`,
 `search-box-*` and `jump-labels` entries. Upstream's Foot selection background
 is off-palette and upstream's tmux port swaps `subtext0` and `subtext1`; both
-are rejected.
+are rejected. Dunst and Swaylock are in the same position and are handled the
+same way.
+
+Two of these carry differences that are worth stating rather than leaving to be
+rediscovered. Dunst draws normal notifications in `subtext0` rather than `text`,
+so an idle desktop is not full of full-brightness text. Swaylock uses red for
+the backspace highlight where upstream uses rosewater, because rosewater does
+not read as destructive, and puts `crust` text on the filled indicator so it
+stays legible in every accent state.
+
+Every one of these seven files now names its upstream repository and file in a
+header comment, so a drifted value can be traced back to a port instead of
+looking like a local decision. Those headers are held to the palette gate too:
+`validate-repo.sh` does not skip comments, which is why a header may not quote
+an off-palette value even when it is only there to explain what was replaced.
 
 Two palette definitions are checked for **drift** rather than merely for valid
 colors, because a value swapped for a different palette member would otherwise
@@ -114,6 +169,13 @@ pass unnoticed: `10-theme.conf` and the `[palettes.catppuccin_mocha]` block in
 `starship.toml` must both spell out all 26 names with the values above. The
 vendored `lua/catppuccin/palettes/mocha.lua` is checked the same way, and must
 carry all 26. Every other theme file is only checked for palette membership.
+
+Palette membership now covers the files that carry colors outside a dedicated
+theme file, which had been slipping through: `waybar/config.jsonc` holds the
+colors used by the bar's own markup rather than by the stylesheet,
+`zsh/.zshrc` holds the FZF colors, and the vendored zsh theme is a color file in
+its own right. All three are in-palette today; the gate exists so that stays
+true.
 
 ## Gaps
 

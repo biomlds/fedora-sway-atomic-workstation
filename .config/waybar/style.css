@@ -1,3 +1,15 @@
+/*
+ * Catppuccin Mocha with the Sapphire accent, for Waybar.
+ *
+ * Upstream : https://github.com/catppuccin/waybar  themes/mocha.css
+ *
+ * Upstream publishes one blue-accent file and no sapphire variant, so this is a
+ * local file on the official palette. The @define-color block names all
+ * twenty-six palette members so stylesheet rules can refer to a role rather than
+ * a hex, and a few upstream values are left unused rather than deleted. The
+ * colours used by the bar's own markup live in config.jsonc, not here, and both
+ * files are enforced by the palette gate.
+ */
 @define-color rosewater #f5e0dc;
 @define-color red #f38ba8;
 @define-color peach #fab387;
