@@ -1,3 +1,14 @@
+/* Catppuccin Mocha with the Sapphire accent, for Rofi.
+ *
+ * Upstream : https://github.com/catppuccin/rofi  themes/catppuccin-mocha.rasi
+ *
+ * A local fork, not a copy. Upstream publishes one blue-accent file, and
+ * substituting the accent alone is not enough for Rofi: the selection and
+ * active states need to sit on crust to stay legible, which upstream handles
+ * with alpha values this file resolves against explicit palette entries
+ * instead. Every colour here is a Mocha member and the file is enforced by the
+ * palette gate.
+ */
 * {
   bg: #1e1e2eee;
   surface: #313244;
