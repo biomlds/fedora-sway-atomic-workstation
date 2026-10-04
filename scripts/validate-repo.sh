@@ -492,9 +492,13 @@ fi
 if grep -qE 'auto_integrations[[:space:]]*=[[:space:]]*true' .config/nvim/init.lua; then
   fail '.config/nvim/init.lua enables auto_integrations but no integration files are vendored'
 fi
-[[ "$CATPPUCCIN_NVIM_COMMIT" =~ ^[0-9a-f]{40}$ ]] \
+# ${VAR:-} rather than $VAR: under `set -u` a pin that was deleted outright
+# would abort the script with an unbound-variable error instead of reaching the
+# message below, and that abort skips every gate after this one, so a missing
+# pin could mask unrelated failures further down.
+[[ "${CATPPUCCIN_NVIM_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]] \
   || fail 'versions.env does not pin CATPPUCCIN_NVIM_COMMIT to a full commit sha'
-if [[ -n "$CATPPUCCIN_NVIM_COMMIT" ]]; then
+if [[ -n "${CATPPUCCIN_NVIM_COMMIT:-}" ]]; then
   grep -q "$CATPPUCCIN_NVIM_COMMIT" "$nvim_vendor/VENDORED.md" \
     || fail 'VENDORED.md does not record the CATPPUCCIN_NVIM_COMMIT pin'
 fi
@@ -524,9 +528,9 @@ if [[ -f "$zshrc" ]]; then
     fail ".config/zsh/.zshrc sources the Catppuccin zsh theme on line $theme_line, at or after the plugin on line $plugin_line; styles set after the plugin loads are ignored"
   fi
 fi
-[[ "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" =~ ^[0-9a-f]{40}$ ]] \
+[[ "${CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]] \
   || fail 'versions.env does not pin CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT to a full commit sha'
-if [[ -n "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" && -f "$zsh_theme" ]]; then
+if [[ -n "${CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT:-}" && -f "$zsh_theme" ]]; then
   grep -q "$CATPPUCCIN_ZSH_SYNTAX_HIGHLIGHTING_COMMIT" "$zsh_theme" \
     || fail 'the vendored Catppuccin zsh theme does not record the pinned commit'
 fi
